@@ -15,7 +15,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'account', 'password',
     ];
 
     /**
@@ -26,4 +26,13 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    protected $connection = 'mysql';
+   
+    public function userGroupList()
+    {
+        return $this->hasMany('\App\models\UserGroup', 'user_id', 'id');
+    }
+
+
 }

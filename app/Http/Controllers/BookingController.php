@@ -1,0 +1,308 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Auth;
+use DateInterval;
+use DatePeriod;
+use DateTime;
+use DB;
+use Illuminate\Http\Request;
+
+class BookingController extends Controller
+{
+    public function index()
+    {
+
+       
+        $user = Auth::user();
+        $timeRanges = \App\models\TimeRange::all()->pluck('description', 'id')->toArray();
+        $devices=[];
+        $deviceMap = [];
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();
+        } else {
+            $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::all();
+        }
+
+        foreach ($_devices as $key => $value) {
+            $devices[$value->group_id][] = $value;
+            $deviceMap[$value->id]=$value;
+        }
+
+        $customers = \App\models\Customer::where('status', 1)->get();
+
+        return view('booking.index', ['devices' => $devices, 'groups' => $groups, 'timeRanges' => $timeRanges, 'customers' => $customers,'deviceMap'=>$deviceMap]);
+    }
+
+    public function postSearch(Request $request)
+    {
+        $data = $request->all();
+      
+        $devices = \App\models\Device::with(['BookingHistory' => function ($q) use ($data) {
+            $q->where('date', '>=', $data['startDate'])
+                ->where('date', '<=', $data['endDate']);
+        }])
+            ->where('group_id', '=', $data['group'])
+            ->where('type', '!=', '鐵捲門')
+            ->where('status', '=', 1);
+
+        if(isset($data['device'])&&$data['device']!=''){
+            $devices = $devices->where('id', '=', $data['device']);
+        }
+        $devices=$devices->get();
+
+        foreach ($devices as $key => $device) {
+            $mark = [];
+            foreach ($device->BookingHistory as $k => $bh) {
+                $mark[$bh->date][$bh->range_id] = $bh;
+            }
+            $devices[$key]->BookingHistory_Mark = $mark;
+        }
+
+        $ranges = $this->MyDateRange($data['startDate'], $data['endDate']);
+        $now = [
+            'day' => date('Y-m-d'),
+            'range' => date('H'),
+        ];
+        $dayMap = [];
+        foreach ($ranges as $key => $value) {
+            $w = date('w', strtotime($value));
+            $str_day = '';
+            switch ($w) {
+                case 1:
+                    $str_day = '星期一';
+                    break;
+                case 2:
+                    $str_day = '星期二';
+                    break;
+                case 3:
+                    $str_day = '星期三';
+                    break;
+                case 4:
+                    $str_day = '星期四';
+                    break;
+                case 5:
+                    $str_day = '星期五';
+                    break;
+                case 6:
+                    $str_day = '星期六';
+                    break;
+                case 0:
+                    $str_day = '星期日';
+                    break;
+            }
+            $dayMap[$value]=$str_day;
+        }
+
+        if (isset($data['sp_pick']) && count($data['sp_pick']) != 0) {
+            foreach ($ranges as $key => $value) {
+                $w = date('w', strtotime($value));
+                if (!in_array($w, $data['sp_pick'])) {
+                    unset($ranges[$key]);
+                }
+            }
+        }
+
+        $timeRanges = \App\models\TimeRange::all()->pluck('description', 'id')->toArray();
+
+        $ss = view('booking.searchTable', ['devices' => $devices, 'ranges' => $ranges, 'timeRanges' => $timeRanges,'dayMap'=>$dayMap,'now' => $now]);
+
+        return $ss;
+    }
+
+    public function getQuery()
+    {
+        $user = Auth::user();
+        $devices=[];
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();
+        } else {
+            $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::all();
+        }
+        foreach ($_devices as $key => $value) {
+            $devices[$value->group_id][] = $value;
+        }
+
+        $_customers = \App\models\Customer::where('status',1)
+                                        ->get();
+        foreach ($_customers as $key => $value) {
+            $customers[]=$value->phone.' - '.$value->name;
+        }
+
+
+        
+
+        return view('booking.query', ['groups' => $groups, 'devices' => $devices,'customers'=> $customers]);
+    }
+
+    public function postQuery(Request $request)
+    {
+        $data = $request->all();
+     
+        $whereRaw = ' where d.group_id = ' . $data['group'];
+        $whereRaw = $whereRaw. ' and bh.date >= \'' .$data['startDate']. '\' and bh.date <= \'' .$data['endDate'].'\'';
+        if($data['device']!=''){
+            $whereRaw = $whereRaw. ' and d.id = ' . $data['device'];
+        }
+        if($data['customer']!=''){
+            $whereRaw = $whereRaw. ' and c.id = \'' .$data['customer'].'\'';
+        }
+
+    
+       
+
+        $sql = 'SELECT  c.id as user_id,c.name as user,c.phone,bh.range_id,tr.description as tr_description,bh.date,bh.description,d.id as device_id ,d.family,d.name,bh.aircontrol
+                FROM hhinfo_remote.booking_histories as bh
+                join hhinfo_remote.devices as d
+                on bh.device_id = d.id
+                join hhinfo_remote.customers as c
+                on bh.customer_id = c.id
+                join hhinfo_remote.time_ranges as tr
+                on bh.range_id = tr.id';
+        $sql = $sql.$whereRaw.' order by bh.date,c.id,bh.range_id';
+        $query = DB::select(DB::raw($sql));
+
+        $rt_data = [];
+        foreach ($query as $key => $value){
+            $rt_data[]=[
+                $value->user,$value->phone,$value->family.'-'.$value->name,$value->date,$value->tr_description,$value->aircontrol==0?'否':'是'
+            ];
+        }
+     
+    
+        return response()->json($rt_data, 200);
+
+    }
+
+    public function postBooking(Request $request)
+    {
+        $data = $request->all();
+        $user = Auth::user();
+
+        if (!isset($data['customer']) || $data['customer'] == '') {
+            return redirect('booking/index')->with('alert-danger', '預約失敗,預約者不可為空值.');
+        }
+
+        if (!isset($data['aircontrol']) || $data['aircontrol'] == '') {
+            return redirect('booking/index')->with('alert-danger', '預約失敗,是否租用冷氣不可為空值.');
+        }
+        if (!isset($data['booking']) || count($data['booking']) == 0) {
+            return redirect('booking/index')->with('alert-danger', '預約失敗,預約時段不可為空值.');
+        }
+
+        foreach ($data['booking'] as $device_id => $arr) {
+            foreach ($arr as $date => $arr2) {
+                foreach ($arr2 as $key => $range_id) {
+                    $bh = new \App\models\BookingHistory;
+                    $bh->device_id = $device_id;
+                    $bh->date = $date;
+                    $bh->customer_id = $data['customer'];
+                    $bh->range_id = $range_id;
+                    $bh->aircontrol = $data['aircontrol'];
+                    $bh->user_id = $user->id;
+                    $bh->description = $data['note'];
+                    $bh->save();
+                }
+            }
+        }
+
+        return redirect('booking/index')->with('alert-success', '預約成功');
+    }
+
+    public function getCalendar()
+    {
+        $user = Auth::user();
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();
+        } else {
+            $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::all();
+        }
+        foreach ($_devices as $key => $value) {
+            $devices[$value->group_id][] = $value;
+            # code...
+        }
+
+        return view('booking.calendar', ['groups' => $groups, 'devices' => $devices]);
+    }
+
+    public function postCalendar(Request $request)
+    {
+        $data = $request->all();
+
+        $sql = 'SELECT  c.id as user_id,c.name as user,c.phone,bh.range_id,tr.start,tr.end,bh.date,bh.description,d.id as device_id ,d.family,d.name
+                FROM hhinfo_remote.booking_histories as bh
+                join hhinfo_remote.devices as d
+                on bh.device_id = d.id
+                join hhinfo_remote.customers as c
+                on bh.customer_id = c.id
+                join hhinfo_remote.time_ranges as tr
+                on bh.range_id = tr.id
+                where d.group_id = ' . $data['group'] . ' and d.id = \'' . $data['device'] . '\'  and  EXTRACT(YEAR_MONTH from bh.date) = \'' . str_replace('-', '', $data['date']) . '\'
+                order by bh.date,c.id,bh.range_id';
+
+        $query = DB::select(DB::raw($sql));
+        $rt = [];
+        foreach ($query as $key => $value) {
+            $rt[$value->date][$value->user_id][] = $value;
+        }
+
+        $eventList = [];
+        foreach ($rt as $k_date => $v) {
+            foreach ($v as $k_user => $vv) {
+                $event = [];
+                foreach ($vv as $k => $vvv) {
+                    if (isset($vv[$k + 1]) && $vv[$k + 1]->range_id == $vvv->range_id + 1) {
+                        $event['title'] = $vvv->user;
+                        $event['start'] = $k_date . ' ' . $vvv->start;
+                    } else {
+                        if ($event != []) {
+                            $event['end'] = $k_date . ' ' . $vvv->end;
+                            $eventList[] = $event;
+                            $event = [];
+                        } else {
+                            $event['title'] = $vvv->user;
+                            $event['start'] = $k_date . ' ' . $vvv->start;
+                            $event['end'] = $k_date . ' ' . $vvv->end;
+                            $eventList[] = $event;
+                            $event = [];
+                        }
+                    }
+
+                }
+            }
+        }
+
+        return response()->json($eventList, 200);
+
+    }
+
+    public function MyDateRange($start, $end)
+    {
+        $array = [];
+        if ($start == $end) {
+            return [$start];
+        }
+
+        $period = new DatePeriod(
+            new DateTime($start),
+            new DateInterval('P1D'),
+            new DateTime($end)
+        );
+
+        foreach ($period as $date) {
+            $array[] = $date->format('Y-m-d');
+        }
+
+        return $array;
+    }
+}

@@ -29,7 +29,7 @@ return [
     |
     */
 
-    'lifetime' => 120,
+    'lifetime' => 1200,
 
     'expire_on_close' => false,
 
@@ -122,8 +122,8 @@ return [
     |
     */
 
+    // 'cookie' => 'laravel_session',
     'cookie' => 'laravel_session',
-
     /*
     |--------------------------------------------------------------------------
     | Session Cookie Path

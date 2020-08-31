@@ -13,6 +13,10 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+            'App\Console\Commands\SetDevice',
+            'App\Console\Commands\RedoSchedule',
+            'App\Console\Commands\CheckLive',
+            
         //
     ];
 
@@ -26,6 +30,16 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')
         //          ->hourly();
+
+        $schedule->command('command:setdevice')
+                ->hourly()
+                ->withoutOverlapping();
+        $schedule->command('command:redoschedule')
+                ->cron('* * * * *')
+                ->withoutOverlapping();
+        $schedule->command('command:checklive')
+                ->everyFiveMinutes()
+                ->withoutOverlapping();
     }
 
     /**

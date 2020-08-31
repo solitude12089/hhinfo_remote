@@ -68,22 +68,36 @@
         <div class="flex-center position-ref full-height">
             @if (Route::has('login'))
                 <div class="top-right links">
-                    <a href="{{ url('/login') }}">Login</a>
-                    <a href="{{ url('/register') }}">Register</a>
+                    @if (Auth::guest())
+                    <a href="{{ route('login') }}">Login</a>
+                      
+                    @else
+                        <a href="{{ url('/logout') }}">Logout</a>
+                    @endif
+
+
                 </div>
             @endif
 
+
+
             <div class="content">
-                <div class="title m-b-md">
-                    Laravel
+              
+                <div>
+                    <img src="/img/index.jpg"></img>
                 </div>
 
                 <div class="links">
-                    <a href="https://laravel.com/docs">Documentation</a>
-                    <a href="https://laracasts.com">Laracasts</a>
+                    @if (Auth::check()&&Auth::user()->role==9)
+                    <a href="/admin/account">管理員功能</a>
+                    @endif
+                    <a href="/customer">客戶查詢</a>
+                    <a href="/remote/index">遠端操作</a>
+                    <a href="/booking/index">租借功能</a>
+                   <!--  <a href="https://laracasts.com">Laracasts</a>
                     <a href="https://laravel-news.com">News</a>
                     <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
+                    <a href="https://github.com/laravel/laravel">GitHub</a> -->
                 </div>
             </div>
         </div>
