@@ -39,6 +39,7 @@ class RedoSchedule extends Command
 	public function handle()
 	{
 		$tools = new \App\Tools2000;
+		$tools_d= new \App\ToolsDiscord;
 		$schedule = \App\models\ScheduleError::where('status',1)
 												->get();
 		$date = date('YmdHis');
@@ -56,8 +57,7 @@ class RedoSchedule extends Command
 				if($value->rty>=3){
 					$value->status = 9;
 					$msg='Error!!!定時排成失敗!!!'.PHP_EOL.'IP : '.$device->ip.' 裝置 : '.$device->family.'-'.$device->name;
-					$tools= new \App\ToolsDiscord;
-					$tools->push($msg);
+					$tools_d->push($msg);
 				}
 				else{
 					$value->rty=$value->rty+1;

@@ -45,7 +45,7 @@ class SetDevice extends Command
                                                         ->where('range_id',$nowRanges)
                                                         ->where('status',1)
                                                         ->get();
-        $devices = \App\models\Device::all();
+        $devices = \App\models\Device::where('status',1)->get();
         $history=[];
         foreach ($booking_histories as $key => $value) {
             $history[$value->device_id] = $value;

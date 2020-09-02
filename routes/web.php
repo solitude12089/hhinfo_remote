@@ -58,8 +58,21 @@ Route::group(['middleware' => 'auth'], function(){
 
  	});
 	//Customer
-	Route::resource('/customer','CustomerController');
-	Route::post('/customer/list','CustomerController@list');
+	Route::group(['prefix' => 'customer'], function (){
+		Route::get('/index','CustomerController@index');
+		Route::get('/create','CustomerController@create');
+		Route::get('{id}/edit','CustomerController@edit');
+		Route::post('{id}/update','CustomerController@update');
+		Route::post('/store','CustomerController@store');
+		Route::post('/list','CustomerController@list');
+		Route::get('/spcard','CustomerController@spcard');
+		Route::get('/create-spcard','CustomerController@getcreatespcard');
+		Route::post('/create-spcard','CustomerController@postcreatespcard');
+		Route::get('/edit-spcard/{id}','CustomerController@geteditspcard');
+		Route::post('/edit-spcard/{id}','CustomerController@posteditspcard');
+	});
+
+
 
 	//Remote
 	Route::group(['prefix' => 'remote'], function () {
@@ -102,12 +115,6 @@ Route::group(['prefix' => '/api/v1'], function () {
 
  		Route::get('/remote/dcode', '\App\Http\Controllers\Api\v1\RemoteController@dcode');
  		Route::get('/remote/operdo', '\App\Http\Controllers\Api\v1\RemoteController@operdo');
- 		Route::get('/remote/test', '\App\Http\Controllers\Api\v1\RemoteController@test');
-
-
- 		Route::get('/remote/api1', '\App\Http\Controllers\Api\v1\RemoteController@api1');
- 		Route::get('/remote/api2', '\App\Http\Controllers\Api\v1\RemoteController@api2');
- 		Route::get('/remote/api3-get', '\App\Http\Controllers\Api\v1\RemoteController@api3Get');
- 		Route::get('/remote/api3-set', '\App\Http\Controllers\Api\v1\RemoteController@api3Set');
+ 	
 });
 

@@ -24,7 +24,7 @@
 
 <div class="row">
     <div class="col-lg-12">
-        <form id='postform' action="{{url('/customer')}}" method="POST" enctype="multipart/form-data">
+        <form id='postform' action="{{url('/customer/store')}}" method="POST" enctype="multipart/form-data">
           
                     <div class="form-group col-lg-12">
                         <label class="control-label">電話</label>

@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
@@ -91,7 +91,7 @@
                     @if (Auth::check()&&Auth::user()->role==9)
                     <a href="/admin/account">管理員功能</a>
                     @endif
-                    <a href="/customer">客戶查詢</a>
+                    <a href="/customer/index">客戶管理</a>
                     <a href="/remote/index">遠端操作</a>
                     <a href="/booking/index">租借功能</a>
                    <!--  <a href="https://laracasts.com">Laracasts</a>

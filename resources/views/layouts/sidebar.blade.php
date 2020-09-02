@@ -35,8 +35,12 @@
 					</a>
 					<ul class="nav nav-second-level">
 						<li>
-							<a href="{{ url ('/customer') }}">
+							<a href="{{ url ('/customer/index') }}">
 								<i class="fa fa-user fa-fw"></i>客戶列表
+							</a>
+
+							<a href="{{ url ('/customer/spcard') }}">
+								<i class="fa fa-credit-card fa-fw"></i>全區卡設定
 							</a>
 						
 
@@ -78,7 +82,7 @@
 							</a>
 
 							<a href="{{ url ('/booking/calendar') }}">
-								<i class="fa fa-search fa-fw"></i>行事曆
+								<i class="fa fa-calendar fa-fw"></i>行事曆
 							</a>
 						
 

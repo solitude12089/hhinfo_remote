@@ -43,10 +43,10 @@ class CustomerController extends Controller
         $data = $request->all();
    
         if(!isset($data['phone'])||$data['phone']==''){
-              return redirect('/customer')->with('alert-danger', '電話不可為空.');
+              return redirect('/customer/index')->with('alert-danger', '電話不可為空.');
         }
          if(!isset($data['name'])||$data['name']==''){
-              return redirect('/customer')->with('alert-danger', '名稱不可為空.');
+              return redirect('/customer/index')->with('alert-danger', '名稱不可為空.');
         }
 
      
@@ -55,7 +55,7 @@ class CustomerController extends Controller
 
         $customer = \App\models\Customer::where('phone',$data['phone'])->first();
         if($customer!=null){
-            return redirect('/customer')->with('alert-danger', '電話重複,無法建立.');
+            return redirect('/customer/index')->with('alert-danger', '電話重複,無法建立.');
         }
 
        
@@ -68,7 +68,7 @@ class CustomerController extends Controller
              $new_customer->card_uuid = $data['card_uuid'];
         }
         $new_customer->save();
-        return redirect('/customer')->with('alert-success', '客戶建立成功.');
+        return redirect('/customer/index')->with('alert-success', '客戶建立成功.');
     }
 
   
@@ -96,10 +96,10 @@ class CustomerController extends Controller
         $data = $request->all();
 
         if(!isset($data['phone'])||$data['phone']==''){
-              return redirect('/customer')->with('alert-danger', '電話不可為空.');
+              return redirect('/customer/index')->with('alert-danger', '電話不可為空.');
         }
          if(!isset($data['name'])||$data['name']==''){
-              return redirect('/customer')->with('alert-danger', '名稱不可為空.');
+              return redirect('/customer/index')->with('alert-danger', '名稱不可為空.');
         }
 
      
@@ -109,7 +109,7 @@ class CustomerController extends Controller
         $customer = \App\models\Customer::where('phone',$data['phone'])
                                         ->where('id','!=',$id)->first();
         if($customer!=null){
-            return redirect('/customer')->with('alert-danger', '電話重複,無法修改.');
+            return redirect('/customer/index')->with('alert-danger', '電話重複,無法修改.');
         }
 
      
@@ -125,20 +125,11 @@ class CustomerController extends Controller
             $old_customer->card_uuid = null;
         }
         $old_customer->save();
-        return redirect('/customer')->with('alert-success', '客戶修改功.');
+        return redirect('/customer/index')->with('alert-success', '客戶修改功.');
     
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
+    
 
     public function list(Request $request){
         $data = $request->all();
@@ -152,4 +143,102 @@ class CustomerController extends Controller
             $rt, 200);
         
     }
+
+    public function spcard(){
+        $spcards = \App\models\Spcard::with('customer')
+                                    ->with('group');
+                                    
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $spcards = $spcards->whereIn('group_id',$ugp)->get();
+        }
+        $spcards = $spcards->get();
+     
+        
+        return view('customer.spcard',['spcards'=>$spcards]);
+
+    }
+
+    public function getcreatespcard(){
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();
+        } else {
+            $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::all();
+        }
+        $familys = [];
+        foreach ($_devices as $key => $value){
+            $familys[$value->group_id][]=$value->family;
+        }
+        foreach ($familys as $key => $value){
+            $familys[$key] = array_unique($value);
+        }
+       
+        return view('customer.create-spcard',['groups'=>$groups,'familys'=>$familys]);
+    }
+
+    public function postcreatespcard(Request $request){
+        $user = Auth::user();
+        $data = $request->all();
+        
+        $old_spcard = \App\models\Spcard::where('customer_id',$data['customer'])->first();
+        if($old_spcard!=null){
+            return redirect('/customer/spcard')->with('alert-danger', '用戶重複,無法建立規則.');
+        }
+
+
+        $spcard = new \App\models\Spcard;
+        $spcard->customer_id = $data['customer'];
+        $spcard->group_id = $data['group'];
+        $spcard->family= $data['family'];
+        $spcard->user_id =$user->id;
+        $spcard->save();
+        return redirect('/customer/spcard')->with('alert-success', '規則建立成功.');
+    }
+
+    public function geteditspcard($spcard_id){
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();
+        } else {
+            $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::all();
+        }
+        $familys = [];
+        foreach ($_devices as $key => $value){
+            $familys[$value->group_id][]=$value->family;
+        }
+        foreach ($familys as $key => $value){
+            $familys[$key] = array_unique($value);
+        }
+        $spcard = \App\models\Spcard::where('id',$spcard_id)->first();
+        return view('customer.edit-spcard',['spcard'=>$spcard,'groups'=>$groups,'familys'=>$familys]);
+    }
+
+    public function posteditspcard(Request $request,$spcard_id){
+        $user = Auth::user();
+        $data = $request->all();
+       
+        $old_spcard = \App\models\Spcard::where('customer_id',$data['customer'])
+                                        ->where('id','!=',$spcard_id)
+                                        ->first();
+        if($old_spcard!=null){
+            return redirect('/customer/spcard')->with('alert-danger', '用戶重複,無法修改規則.');
+        }
+
+
+        $spcard = \App\models\Spcard::where('id',$spcard_id)->first();
+        $spcard->customer_id = $data['customer'];
+        $spcard->group_id = $data['group'];
+        $spcard->family= $data['family'];
+        $spcard->user_id =$user->id;
+        $spcard->save();
+        return redirect('/customer/spcard')->with('alert-success', '規則修改成功.');
+    }
+
+
+
 }

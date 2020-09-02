@@ -79,6 +79,14 @@ class Tools2000
 
     }
 
+    /**
+	* 設定狀態
+    *
+    * @param  String  $device_id  DeviceID
+	* @param  Array  $setData  修改資料 ex:['1'=>'255','Relay'=>'Action']
+	* @return Array 
+	* 
+	*/
     public function setStatus($device_id,$setData){
 
         $device = \App\models\Device::where('id',$device_id)->first();

@@ -24,8 +24,7 @@
 
 <div class="row">
     <div class="col-lg-12">
-        <form id='postform' action="{{url('/customer/'.$customer->id)}}" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="_method" value="PUT">
+        <form id='postform' action="{{url('/customer/'.$customer->id.'/update')}}" method="POST" enctype="multipart/form-data">
                     <div class="form-group col-lg-12">
                         <label class="control-label">電話</label>
                         <div>

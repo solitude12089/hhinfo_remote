@@ -298,13 +298,13 @@ class AdminController extends Controller
      
 
 
-        $device = \App\models\device::where('ip',$data['IP'])->first();
+        $device = \App\models\Device::where('ip',$data['IP'])->first();
         if($device!=null){
             return redirect('admin/device')->with('alert-danger', 'IP重複,無法建立.');
         }
        
 
-        $new_device = new \App\models\device;
+        $new_device = new \App\models\Device;
         $new_device->ip = $data['IP'];
         $new_device->name = $data['name'];
         $new_device->group_id = $data['group'];
@@ -321,7 +321,7 @@ class AdminController extends Controller
 
     public function getEditDevice($id){
        
-        $device = \App\models\device::where('id',$id)->first();
+        $device = \App\models\Device::where('id',$id)->first();
         $groups = \App\models\Group::all()->pluck('name','id')->toArray();
        
         return view('admin.edit-device-modal',['groups'=>$groups,'device'=>$device]);
@@ -333,7 +333,7 @@ class AdminController extends Controller
             return redirect('/')->with('alert-danger', '權限不符.');
         }
 
-        $olddevice = \App\models\device::where('id',$id)->first();
+        $olddevice = \App\models\Device::where('id',$id)->first();
         if($olddevice==null){
             return redirect('admin/device')->with('alert-danger', '資料錯誤,無法修改.');
         }
@@ -357,7 +357,7 @@ class AdminController extends Controller
      
 
 
-        $device = \App\models\device::where('ip',$data['IP'])
+        $device = \App\models\Device::where('ip',$data['IP'])
                                     ->where('id','!=',$id)
                                     ->first();
         if($device!=null){

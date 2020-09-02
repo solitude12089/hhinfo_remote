@@ -114,6 +114,43 @@ class BookingController extends Controller
         return $ss;
     }
 
+ 
+
+    public function postBooking(Request $request)
+    {
+        $data = $request->all();
+        $user = Auth::user();
+
+        if (!isset($data['customer']) || $data['customer'] == '') {
+            return redirect('booking/index')->with('alert-danger', '預約失敗,預約者不可為空值.');
+        }
+
+        if (!isset($data['aircontrol']) || $data['aircontrol'] == '') {
+            return redirect('booking/index')->with('alert-danger', '預約失敗,是否租用冷氣不可為空值.');
+        }
+        if (!isset($data['booking']) || count($data['booking']) == 0) {
+            return redirect('booking/index')->with('alert-danger', '預約失敗,預約時段不可為空值.');
+        }
+
+        foreach ($data['booking'] as $device_id => $arr) {
+            foreach ($arr as $date => $arr2) {
+                foreach ($arr2 as $key => $range_id) {
+                    $bh = new \App\models\BookingHistory;
+                    $bh->device_id = $device_id;
+                    $bh->date = $date;
+                    $bh->customer_id = $data['customer'];
+                    $bh->range_id = $range_id;
+                    $bh->aircontrol = $data['aircontrol'];
+                    $bh->user_id = $user->id;
+                    $bh->description = $data['note'];
+                    $bh->save();
+                }
+            }
+        }
+
+        return redirect('booking/index')->with('alert-success', '預約成功');
+    }
+
     public function getQuery()
     {
         $user = Auth::user();
@@ -129,17 +166,13 @@ class BookingController extends Controller
         foreach ($_devices as $key => $value) {
             $devices[$value->group_id][] = $value;
         }
-
-        $_customers = \App\models\Customer::where('status',1)
-                                        ->get();
-        foreach ($_customers as $key => $value) {
-            $customers[]=$value->phone.' - '.$value->name;
-        }
+       
+      
 
 
         
 
-        return view('booking.query', ['groups' => $groups, 'devices' => $devices,'customers'=> $customers]);
+        return view('booking.query', ['groups' => $groups, 'devices' => $devices]);
     }
 
     public function postQuery(Request $request)
@@ -179,41 +212,6 @@ class BookingController extends Controller
     
         return response()->json($rt_data, 200);
 
-    }
-
-    public function postBooking(Request $request)
-    {
-        $data = $request->all();
-        $user = Auth::user();
-
-        if (!isset($data['customer']) || $data['customer'] == '') {
-            return redirect('booking/index')->with('alert-danger', '預約失敗,預約者不可為空值.');
-        }
-
-        if (!isset($data['aircontrol']) || $data['aircontrol'] == '') {
-            return redirect('booking/index')->with('alert-danger', '預約失敗,是否租用冷氣不可為空值.');
-        }
-        if (!isset($data['booking']) || count($data['booking']) == 0) {
-            return redirect('booking/index')->with('alert-danger', '預約失敗,預約時段不可為空值.');
-        }
-
-        foreach ($data['booking'] as $device_id => $arr) {
-            foreach ($arr as $date => $arr2) {
-                foreach ($arr2 as $key => $range_id) {
-                    $bh = new \App\models\BookingHistory;
-                    $bh->device_id = $device_id;
-                    $bh->date = $date;
-                    $bh->customer_id = $data['customer'];
-                    $bh->range_id = $range_id;
-                    $bh->aircontrol = $data['aircontrol'];
-                    $bh->user_id = $user->id;
-                    $bh->description = $data['note'];
-                    $bh->save();
-                }
-            }
-        }
-
-        return redirect('booking/index')->with('alert-success', '預約成功');
     }
 
     public function getCalendar()
