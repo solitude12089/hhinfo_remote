@@ -13,7 +13,12 @@
 @section('style')
 @parent
     <link href="/css/chosen/chosen.min.css" rel="stylesheet">
-
+    <link href="/css/jquery-ui.css" rel="stylesheet">
+    <style>
+        ul.ui-autocomplete {
+            z-index: 1100;
+        }
+    </style>
 @stop
 
 
@@ -104,7 +109,9 @@
 
 @section('script')
 <script src="/js/chosen/chosen.jquery.min.js"></script>
+<script src="/js/jquery-ui.js"></script>
 <script>
+    var familys = <?php echo json_encode($familys); ?>;
     function action($obj){
             $($obj).attr('disabled', true);
             var device_id = $($obj).attr('target_id');

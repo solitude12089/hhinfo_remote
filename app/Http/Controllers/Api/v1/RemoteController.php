@@ -19,7 +19,6 @@ class RemoteController extends Controller {
 
 
 		Log::debug(__Function__.' get Data :'.json_encode($data));
-
 		if(!isset($data['txcode'])||!isset($data['controlip'])){
 			//return;
 			return response('serverip='.$serverip, 200)
@@ -44,11 +43,19 @@ class RemoteController extends Controller {
                   ->header('Content-Type', 'text/plain');
 		}
 
+		
 		//Check White list
+		$spcard = \App\models\Spcard::where('customer_id',$customer->id)->first();
+		if($spcard!=null){
+			if(in_array($device->family,$spcard->family)&&$device->group_id ==$spcard->group_id){
+				return $this->opendoor($device);
+			}
+		}
+
 
 		//Check bookongs
 		$searchDevice = [];
-		if($device->type=='鐵捲門'){
+		if($device->type=='鐵捲門'||$device->type=='公用鐵捲門'){
 			$searchDevice = \App\models\Device::where('group_id',$device->group_id)
 												->where('family',$device->family)
 												->where('status',1)
@@ -62,31 +69,30 @@ class RemoteController extends Controller {
 		$nowRanges = date('H');
         $toDay = date('Y-m-d');
         $booking = \App\models\BookingHistory::where('date',$toDay)
-                                                        ->where('range_id',$nowRanges)
-														->where('status',1)
-														->where('customer_id',$customer->id)
-														->whereIn('device_id',$searchDevice)
-                                                        ->get()->count();
+												->where('range_id',$nowRanges)
+												->where('status',1)
+												->where('customer_id',$customer->id)
+												->whereIn('device_id',$searchDevice)
+												->get()->count();
 		if($booking>0){
-			if($device->type=='鐵捲門')
-			{
-				$opentime='1';
-				$job = (new \App\Jobs\responseJob($device->id))->delay(1);
-        		dispatch($job);
-			}
-			else{
-				$opentime='4';
-			}
-			
-			$gateno ='1';
-			$rt='serverip='.$serverip."&gateno=".$gateno."&opentime=".$opentime;
-			return response($rt, 200)
-				->header('Content-Type', 'text/plain');
+			return $this->opendoor($device);
 		}
 		else{
+			//過時間關鐵捲門
+			if($device->type=='公用鐵捲門'||$device->type=='鐵捲門'){
+				$over_booking = \App\models\BookingHistory::where('date',$toDay)
+												->where('range_id','<=',$nowRanges)
+												->where('status',1)
+												->where('customer_id',$customer->id)
+												->whereIn('device_id',$searchDevice)
+												->get()->count();
+				if($over_booking>0){
+					Log::debug(__Function__.' 過時間關鐵捲門');
+					return $this->closedoor();
+				}
+			}
 			return response('serverip='.$serverip, 200)
                   ->header('Content-Type', 'text/plain');
-			return 'Not Booking';
 		}
 
 	}
@@ -95,6 +101,34 @@ class RemoteController extends Controller {
 		$data= $request->all();
 		Log::debug(__Function__.' get Data :'.json_encode($data));
 	}
+
+	public function opendoor($device){
+		$serverip = env('SERVER_IP');
+		if($device->type=='鐵捲門'||$device->type=='公用鐵捲門')
+		{
+			$opentime='1';
+			$job = (new \App\Jobs\responseJob($device->id))->delay(2);
+			dispatch($job);
+		}
+		else{
+			$opentime='4';
+		}
+			
+		$gateno ='1';
+		$rt='serverip='.$serverip."&gateno=".$gateno."&opentime=".$opentime;
+		return response($rt, 200)
+			->header('Content-Type', 'text/plain');
+	}
+
+	public function closedoor(){
+		$serverip = env('SERVER_IP');
+		$opentime='1';
+		$gateno ='2';
+		$rt='serverip='.$serverip."&gateno=".$gateno."&opentime=".$opentime;
+		return response($rt, 200)
+			->header('Content-Type', 'text/plain');
+	}
+	
 
 
 }

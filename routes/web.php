@@ -70,6 +70,8 @@ Route::group(['middleware' => 'auth'], function(){
 		Route::post('/create-spcard','CustomerController@postcreatespcard');
 		Route::get('/edit-spcard/{id}','CustomerController@geteditspcard');
 		Route::post('/edit-spcard/{id}','CustomerController@posteditspcard');
+		Route::post('/checkcardid','CustomerController@checkcardid');
+	
 	});
 
 
@@ -97,6 +99,8 @@ Route::group(['middleware' => 'auth'], function(){
 
 		Route::get('/calendar','BookingController@getCalendar');
 		Route::post('/calendar','BookingController@postCalendar');
+
+		Route::post('/remove','BookingController@remove');
 	});
 
 

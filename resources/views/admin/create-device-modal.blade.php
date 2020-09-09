@@ -46,13 +46,6 @@
 
                         </div>
                     </div>
-                     <div class="form-group col-lg-12">
-                        <label class="control-label">群組</label>
-                        <div>
-                            <input id="family" name="family"  class="form-control" >
-                        </div>
-                    </div>
-
                     <div class="form-group col-lg-12">
                         <label class="control-label">區域</label>
                         <div>
@@ -65,6 +58,14 @@
 
                         </div>
                     </div>
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">群組</label>
+                        <div>
+                            <input id="family" name="family"  class="form-control" >
+                        </div>
+                    </div>
+
+                   
 
 
                     <div class="form-group col-lg-12">
@@ -73,6 +74,8 @@
                             <select  id="type" name="type" class="form-control chosen">
                                 <option value="一般">一般</option>
                                 <option value="鐵捲門">鐵捲門</option>
+                                <option value="公用鐵捲門">公用鐵捲門</option>
+
 
                             </select>
 
@@ -123,6 +126,17 @@
         width:"100%",
         allow_single_deselect:true
     });
+
+    $('#group').on('change',function(){
+        var source = [];
+        if(familys[$('#group').val()]!=null){
+            source=familys[$('#group').val()];
+        }
+        $( "#family" ).autocomplete({
+                source:source
+        });
+    });
+    $('#group').trigger('change');
 
 
 </script>

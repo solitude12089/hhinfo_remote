@@ -59,13 +59,20 @@ class CustomerController extends Controller
         }
 
        
+       
 
         $new_customer = new \App\models\Customer;
         $new_customer->phone = $data['phone'];
         $new_customer->name = $data['name'];
    
         if(isset($data['card_uuid'])&&$data['card_uuid']!=''){
-             $new_customer->card_uuid = $data['card_uuid'];
+            $old_card = \App\models\Customer::where('card_uuid',$data['card_uuid'])->first();
+            if($old_card!==null){
+                $old_card->card_uuid = '';
+                $old_card->save();
+            }
+
+            $new_customer->card_uuid = $data['card_uuid'];
         }
         $new_customer->save();
         return redirect('/customer/index')->with('alert-success', '客戶建立成功.');
@@ -119,7 +126,17 @@ class CustomerController extends Controller
         $old_customer->status = $data['status'];
    
         if(isset($data['card_uuid'])&&$data['card_uuid']!=''){
-             $old_customer->card_uuid = $data['card_uuid'];
+            $old_customer->card_uuid = $data['card_uuid'];
+
+            $old_card = \App\models\Customer::where('card_uuid',$data['card_uuid'])
+                                        ->where('id','!=',$id)
+                                        ->first();
+            if($old_card!==null){
+                $old_card->card_uuid = '';
+                $old_card->save();
+            }
+
+
         }
         else{
             $old_customer->card_uuid = null;
@@ -129,6 +146,26 @@ class CustomerController extends Controller
     
     }
 
+
+    public function checkcardid(Request $request){
+        $data = $request->all();
+        $check = \App\models\Customer::where('card_uuid',$data['card_id']);
+
+        if($data['id']==null){
+            $check = $check->first();
+        }
+        else{
+            $check = $check->where('id','!=',$data['id'])
+                            ->first();
+        }
+
+        if($check==null){
+            return response()->json(1, 200);
+        }
+        else{
+            return response()->json($check, 200);
+        }
+    }
     
 
     public function list(Request $request){
@@ -145,22 +182,26 @@ class CustomerController extends Controller
     }
 
     public function spcard(){
+        $user = Auth::user();
         $spcards = \App\models\Spcard::with('customer')
                                     ->with('group');
                                     
-        if (Auth::user()->role != 9) {
+        if ($user->role != 9) {
+           
             $ugp = $user->userGroupList->pluck('group_id')->toArray();
-            $spcards = $spcards->whereIn('group_id',$ugp)->get();
+           
+            $spcards = $spcards->whereIn('group_id',$ugp);
         }
         $spcards = $spcards->get();
-     
+        
         
         return view('customer.spcard',['spcards'=>$spcards]);
 
     }
 
     public function getcreatespcard(){
-        if (Auth::user()->role != 9) {
+        $user = Auth::user();
+        if ($user->role != 9) {
             $ugp = $user->userGroupList->pluck('group_id')->toArray();
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();
@@ -199,7 +240,8 @@ class CustomerController extends Controller
     }
 
     public function geteditspcard($spcard_id){
-        if (Auth::user()->role != 9) {
+        $user = Auth::user();
+        if ($user->role != 9) {
             $ugp = $user->userGroupList->pluck('group_id')->toArray();
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();

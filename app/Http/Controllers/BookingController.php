@@ -22,10 +22,15 @@ class BookingController extends Controller
         if (Auth::user()->role != 9) {
             $ugp = $user->userGroupList->pluck('group_id')->toArray();
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
-            $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)
+                                            ->where('status',1)
+                                            ->where('type','!=','公用鐵捲門')
+                                            ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
-            $_devices = \App\models\Device::all();
+            $_devices = \App\models\Device::where('status',1)
+                                        ->where('type','!=','公用鐵捲門')
+                                        ->get();
         }
 
         foreach ($_devices as $key => $value) {
@@ -47,7 +52,7 @@ class BookingController extends Controller
                 ->where('date', '<=', $data['endDate']);
         }])
             ->where('group_id', '=', $data['group'])
-            ->where('type', '!=', '鐵捲門')
+            ->where('type', '!=', '公用鐵捲門')
             ->where('status', '=', 1);
 
         if(isset($data['device'])&&$data['device']!=''){
@@ -131,24 +136,62 @@ class BookingController extends Controller
         if (!isset($data['booking']) || count($data['booking']) == 0) {
             return redirect('booking/index')->with('alert-danger', '預約失敗,預約時段不可為空值.');
         }
-
-        foreach ($data['booking'] as $device_id => $arr) {
-            foreach ($arr as $date => $arr2) {
-                foreach ($arr2 as $key => $range_id) {
-                    $bh = new \App\models\BookingHistory;
-                    $bh->device_id = $device_id;
-                    $bh->date = $date;
-                    $bh->customer_id = $data['customer'];
-                    $bh->range_id = $range_id;
-                    $bh->aircontrol = $data['aircontrol'];
-                    $bh->user_id = $user->id;
-                    $bh->description = $data['note'];
-                    $bh->save();
+        try {
+            DB::beginTransaction();
+            $success_bh=[];
+            foreach ($data['booking'] as $device_id => $arr) {
+                foreach ($arr as $date => $arr2) {
+                    foreach ($arr2 as $key => $range_id) {
+                        $bh = new \App\models\BookingHistory;
+                        $bh->device_id = $device_id;
+                        $bh->date = $date;
+                        $bh->customer_id = $data['customer'];
+                        $bh->range_id = $range_id;
+                        $bh->aircontrol = $data['aircontrol'];
+                        $bh->user_id = $user->id;
+                        $bh->description = $data['note'];
+                        $bh->save();
+                        $success_bh[]=$bh;
+                    }
                 }
             }
-        }
+            DB::commit();
 
-        return redirect('booking/index')->with('alert-success', '預約成功');
+
+            $nowRanges = date('H');
+            $toDay = date('Y-m-d');
+            $tools = new \App\Tools2000;
+            foreach($success_bh as $key => $value){
+                if($value->range_id==$nowRanges&&$value->date==$toDay){
+                    if($value->aircontrol==1){
+                        $setData = [
+                            "3"=>"255",
+                            "4"=>"255"
+                        ];
+                    }
+                    else{
+                        $setData = [
+                            "3"=>"255",
+                            "4"=>"0"
+                        ];
+                    }
+                    $rt = $tools->setStatus($value->device_id,$setData);
+                }
+            }
+
+            return redirect('booking/index')->with('alert-success', '預約成功');
+        }
+        catch(\Exception $e){
+            $errorCode = $e->errorInfo[1];
+            $msg = $e->getMessage();
+            if($errorCode == 1062){
+                $msg='預約時段重複,請重新整理後再試.';
+            }
+            return redirect('booking/index')->with('alert-danger', '預約失敗,'.$msg);
+        }
+      
+
+      
     }
 
     public function getQuery()
@@ -158,10 +201,15 @@ class BookingController extends Controller
         if (Auth::user()->role != 9) {
             $ugp = $user->userGroupList->pluck('group_id')->toArray();
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
-            $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)
+                                            ->where('status',1)
+                                            ->where('type','!=','公用鐵捲門')
+                                             ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
-            $_devices = \App\models\Device::all();
+            $_devices = \App\models\Device::where('status',1)
+                                           ->where('type','!=','公用鐵捲門')
+                                           ->get();
         }
         foreach ($_devices as $key => $value) {
             $devices[$value->group_id][] = $value;
@@ -191,7 +239,7 @@ class BookingController extends Controller
     
        
 
-        $sql = 'SELECT  c.id as user_id,c.name as user,c.phone,bh.range_id,tr.description as tr_description,bh.date,bh.description,d.id as device_id ,d.family,d.name,bh.aircontrol
+        $sql = 'SELECT  bh.id as bh_id,c.id as user_id,c.name as user,c.phone,bh.range_id,tr.description as tr_description,bh.date,bh.description,d.id as device_id ,d.family,d.name,bh.aircontrol
                 FROM hhinfo_remote.booking_histories as bh
                 join hhinfo_remote.devices as d
                 on bh.device_id = d.id
@@ -201,11 +249,13 @@ class BookingController extends Controller
                 on bh.range_id = tr.id';
         $sql = $sql.$whereRaw.' order by bh.date,c.id,bh.range_id';
         $query = DB::select(DB::raw($sql));
-
+       // dd($sql,$query);
         $rt_data = [];
         foreach ($query as $key => $value){
+            $ckbok = '<input type=checkbox name="remove[]" value="'.$value->bh_id.'"></input>';
+            // $action = '<button class="btn btn-danger btn-xs" target_id="'.$value->bh_id.'" onclick="remove(this)">刪除</button>';
             $rt_data[]=[
-                $value->user,$value->phone,$value->family.'-'.$value->name,$value->date,$value->tr_description,$value->aircontrol==0?'否':'是'
+                $ckbok,$value->user,$value->phone,$value->family.'-'.$value->name,$value->date,$value->tr_description,$value->aircontrol==0?'否':'是'
             ];
         }
      
@@ -220,10 +270,15 @@ class BookingController extends Controller
         if (Auth::user()->role != 9) {
             $ugp = $user->userGroupList->pluck('group_id')->toArray();
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
-            $_devices = \App\models\Device::whereIn('group_id', $ugp)->get();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)
+                                           ->where('status',1)
+                                           ->where('type','!=','公用鐵捲門')
+                                           ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
-            $_devices = \App\models\Device::all();
+            $_devices = \App\models\Device::where('status',1)
+                                        ->where('type','!=','公用鐵捲門')
+                                        ->get();
         }
         foreach ($_devices as $key => $value) {
             $devices[$value->group_id][] = $value;
@@ -247,21 +302,24 @@ class BookingController extends Controller
                 on bh.range_id = tr.id
                 where d.group_id = ' . $data['group'] . ' and d.id = \'' . $data['device'] . '\'  and  EXTRACT(YEAR_MONTH from bh.date) = \'' . str_replace('-', '', $data['date']) . '\'
                 order by bh.date,c.id,bh.range_id';
-
+       
         $query = DB::select(DB::raw($sql));
         $rt = [];
         foreach ($query as $key => $value) {
             $rt[$value->date][$value->user_id][] = $value;
         }
-
+      
         $eventList = [];
         foreach ($rt as $k_date => $v) {
             foreach ($v as $k_user => $vv) {
                 $event = [];
                 foreach ($vv as $k => $vvv) {
+                  
                     if (isset($vv[$k + 1]) && $vv[$k + 1]->range_id == $vvv->range_id + 1) {
-                        $event['title'] = $vvv->user;
-                        $event['start'] = $k_date . ' ' . $vvv->start;
+                        if($event==[]){
+                            $event['title'] = $vvv->user;
+                            $event['start'] = $k_date . ' ' . $vvv->start;
+                        }
                     } else {
                         if ($event != []) {
                             $event['end'] = $k_date . ' ' . $vvv->end;
@@ -279,7 +337,7 @@ class BookingController extends Controller
                 }
             }
         }
-
+      
         return response()->json($eventList, 200);
 
     }
@@ -302,5 +360,18 @@ class BookingController extends Controller
         }
 
         return $array;
+    }
+
+
+    public function remove(Request $request){
+
+        $data =$request->all();
+        
+       
+        if(!isset($data['remove_id'])||count($data['remove_id'])==0){
+            return redirect('booking/query')->with('alert-danger', '刪除失敗,請點選資料');
+        }
+        $bh = \App\models\BookingHistory::whereIn('id',$data['remove_id'])->delete();
+        return redirect('booking/query')->with('alert-success', '刪除成功');
     }
 }

@@ -17,6 +17,7 @@
     <link href="/css/daterangepicker.css" rel="stylesheet">
     <!-- //<link href="/css/datatables.min.css" rel="stylesheet"> -->
     <link href="/css/jquery-ui.css" rel="stylesheet">
+    <link href="/css/bootstrap-dialog.min.css" rel="stylesheet">
 
     <style>
         fieldset {
@@ -126,10 +127,14 @@
 <div class="box">
     <div class="box-header with-border">
         <h3 class="box-title">查詢結果</h3>
+        <div class="box-tools pull-right">
+            <button class="btn btn-danger btn-xs"  onclick="remove()">刪除</button>
 
+        </div>
     </div>
     <!-- /.box-header -->
     <div class="box-body">
+        
         <div class="row">
             <table id='rt_table'>
             </table>
@@ -138,6 +143,10 @@
     </div>
     <!-- /.box-body -->
 </div>
+
+<form id='remove_from' action="{{url('/booking/remove')}}" method="POST" enctype="multipart/form-data" hidden>
+        <input id="remove_id" name='remove_id'>
+</form>
 
 
 
@@ -155,6 +164,7 @@
     <script src="/js/moment.min.js"></script>
     <script src="/js/daterangepicker.js"></script>
     <script src="/js/jquery-ui.js"></script>
+    <script src="/js/bootstrap-dialog.min.js"></script>
 
     <script>
         var devices = <?php echo json_encode($devices); ?>;
@@ -187,6 +197,29 @@
             "showCustomRangeLabel": false,
             locale:{
                 format:'YYYY-MM-DD',
+                "monthNames": [
+                    "一月",
+                    "二月",
+                    "三月",
+                    "四月",
+                    "五月",
+                    "六月",
+                    "七月",
+                    "八月",
+                    "九月",
+                    "十月",
+                    "十一月",
+                    "十二月"
+                ],
+                "daysOfWeek": [
+                    "日",
+                    "一",
+                    "二",
+                    "三",
+                    "四",
+                    "五",
+                    "六"
+                ],
 
             },
         });
@@ -232,7 +265,12 @@
                         datatable = $('#rt_table').DataTable({
                             pageLength: 50,
                             data: result,
-                            columns: [{
+                            columns: [
+                                {
+                                    title:"",
+                                    width:"5%",
+                                },
+                                {
                                     title: "姓名",
                                    
                                 },
@@ -252,6 +290,7 @@
                                 {
                                     title: "是否租借冷氣"
                                 },
+                             
                             ]
                         });
                     }
@@ -264,6 +303,51 @@
             });
         });
 
+
+        function remove(){
+           
+            $removes = $('[name ="remove[]"]:checked');
+            if($removes.length==0){
+                alert('請勾選刪除項目');
+                return;
+            }
+            $msg = '';
+            $.each($removes,function(k,v){
+               
+              
+                $device = $($(v).parents('tr').children('td').get(3)).html();
+                $user = $($(v).parents('tr').children('td').get(1)).html();
+                $phone =  $($(v).parents('tr').children('td').get(2)).html();
+                $date = $($(v).parents('tr').children('td').get(4)).html();
+                $time = $($(v).parents('tr').children('td').get(5)).html();
+                $msg =  $msg+'<div>租借人:'+$user+' - '+$phone+'</div>\
+                    <div>租借日期:'+$date+'</div>\
+                    <div>租借時間:'+$time+'</div>\
+                    <div>租借地點:'+$device+'</div><br>';
+            });
+            BootstrapDialog.confirm({
+                title: '刪除確認',
+                message: $msg,
+                type: BootstrapDialog.TYPE_DANGER, // <-- Default value is BootstrapDialog.TYPE_PRIMARY
+                closable: true, // <-- Default value is false
+                draggable: true, // <-- Default value is false
+                btnCancelLabel: '取消', // <-- Default value is 'Cancel',
+                btnOKLabel: '確定', // <-- Default value is 'OK',
+                btnOKClass: 'btn-danger', // <-- If you didn't specify it, dialog type will be used,
+                callback: function(result) {
+                    
+                    if(result) {
+                        $('#remove_from').empty;
+                        $.each($removes,function(k,v){
+                            $('#remove_from').append(' <input id="remove_id" name="remove_id[]" value="'+$(v).val()+'">');
+                        });
+                        $('#remove_from').submit();
+                        
+                    }
+                }
+            });
+
+        }
 
 
 

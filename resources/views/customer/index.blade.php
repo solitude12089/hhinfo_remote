@@ -13,7 +13,7 @@
 @section('style')
 @parent
     <link href="/css/datatables.min.css" rel="stylesheet">
-
+    <link href="/css/bootstrap-dialog.min.css" rel="stylesheet">
 @stop
 
 
@@ -97,7 +97,7 @@
 
 @section('script')
     <script src="/js/datatables.min.js"></script>
-
+    <script src="/js/bootstrap-dialog.min.js"></script>
 
 
 @stop

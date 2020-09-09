@@ -260,10 +260,20 @@ class AdminController extends Controller
 
 
 
+
+
     public function getDevice(){
-        $devices = \App\models\Device::with('converterList')->get();
+        $devices = \App\models\Device::all();
+        $familys=[];
+        foreach($devices as $device){
+            $familys[$device->group_id][]=$device->family;
+        }
+        foreach ($familys as $key => $value){
+            $familys[$key] = array_values(array_unique($value));
+        }
+     
         $groups = \App\models\Group::all()->pluck('name','id')->toArray();
-        return view('admin.device',['devices'=>$devices,'groups'=>$groups]);
+        return view('admin.device',['devices'=>$devices,'groups'=>$groups,'familys'=>$familys]);
     }
 
     public function getCreateDevice(){
@@ -311,7 +321,7 @@ class AdminController extends Controller
         $new_device->family = $data['family'];
 
         if(isset($data['description'])&&$data['description']!=''){
-             $new_device->description = $data['description'];
+            $new_device->description = $data['description'];
         }
 
         $new_device->type = $data['type'];
@@ -372,10 +382,7 @@ class AdminController extends Controller
         $olddevice->group_id = $data['group'];
         $olddevice->family = $data['family'];
         $olddevice->status = $data['status'];
-        if(isset($data['description'])&&$data['description']!=''){
-             $olddevice->description = $data['description'];
-        }
-
+        $olddevice->description = $data['description'];
         $olddevice->type = $data['type'];
         $olddevice->save();
 

@@ -145,9 +145,22 @@
     <script src="/js/chosen/chosen.jquery.min.js"></script>
     <script src="/js/bootstrap-datepicker.min.js"></script>
     <script src="/js/fullcalendar/main.min.js"></script>
+    <script src="/js/fullcalendar/locales-all.min.js"></script>
     <script>
         var devices = <?php echo json_encode($devices); ?>;
-       
+        
+        $.fn.datepicker.dates['en'] = {
+            days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+            daysMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+            months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+            monthsShort: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
+            today: "Today",
+            clear: "Clear",
+            format: "mm/dd/yyyy",
+            titleFormat: "MM yyyy", /* Leverages same syntax as 'format' */
+            weekStart: 0
+        };
 
         $('.chosen').chosen({
             width:"100%",
@@ -193,6 +206,7 @@
                     $('#calendar').empty();
                     var calendarEl = document.getElementById('calendar');
                     var calendar = new FullCalendar.Calendar(calendarEl, {
+                        locale: 'zh-tw',
                         headerToolbar: {
                             left: '',
                             center: 'title',

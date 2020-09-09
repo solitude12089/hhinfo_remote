@@ -103,6 +103,7 @@ class Tools2000
         }
 
         $path = '/api/v2/remote/rcode?token='.$token.$command.'&serverip'.$serverip;
+       
         $rt = $this->httpGet($ip,$path);
         return $rt;
     }

@@ -52,7 +52,7 @@
             .links > a {
                 color: #636b6f;
                 padding: 0 25px;
-                font-size: 12px;
+                font-size: 24px;
                 font-weight: 600;
                 letter-spacing: .1rem;
                 text-decoration: none;
@@ -62,6 +62,7 @@
             .m-b-md {
                 margin-bottom: 30px;
             }
+            
         </style>
     </head>
     <body>
@@ -82,23 +83,20 @@
 
 
             <div class="content">
-              
-                <div>
-                    <img src="/img/index.jpg"></img>
+                <div class="links" >
+                    @if (Auth::check()&&Auth::user()->role==9)
+                    <a  href="/admin/account">管理員功能</a>
+                    @endif
+                    <a  href="/customer/index">客戶管理</a>
+                    <a  href="/remote/index">遠端操作</a>
+                    <a  href="/booking/index">租借功能</a>
+                 
+                </div>
+                <div style="padding: 100px;">
+                    <img src="/img/index.png" width="250px"></img>
                 </div>
 
-                <div class="links">
-                    @if (Auth::check()&&Auth::user()->role==9)
-                    <a href="/admin/account">管理員功能</a>
-                    @endif
-                    <a href="/customer/index">客戶管理</a>
-                    <a href="/remote/index">遠端操作</a>
-                    <a href="/booking/index">租借功能</a>
-                   <!--  <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a> -->
-                </div>
+               
             </div>
         </div>
     </body>

@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
             'App\Console\Commands\SetDevice',
+            'App\Console\Commands\SetDeviceTime',
             'App\Console\Commands\RedoSchedule',
             'App\Console\Commands\CheckLive',
             
@@ -33,6 +34,9 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('command:setdevice')
                 ->hourly()
+                ->withoutOverlapping();
+        $schedule->command('command:setdevicetime')
+                ->cron('0 */2 * * *')
                 ->withoutOverlapping();
         $schedule->command('command:redoschedule')
                 ->cron('* * * * *')
