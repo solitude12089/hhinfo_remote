@@ -9,15 +9,15 @@ use Log;
 
 use DatePeriod;
 use DateInterval;
-
+use \App\SysLog;
 class RemoteController extends Controller {
 
 	
 	public function dcode(Request $request){
 		$data= $request->all();
 		$serverip = env('SERVER_IP');
-
-
+	
+		
 		Log::debug(__Function__.' get Data :'.json_encode($data));
 		if(!isset($data['txcode'])||!isset($data['controlip'])){
 			//return;
@@ -43,11 +43,13 @@ class RemoteController extends Controller {
                   ->header('Content-Type', 'text/plain');
 		}
 
+		$event = SysLog::log('normal','swipe card',$customer->id,$device->id);
 		
 		//Check White list
 		$spcard = \App\models\Spcard::where('customer_id',$customer->id)->first();
 		if($spcard!=null){
 			if(in_array($device->family,$spcard->family)&&$device->group_id ==$spcard->group_id){
+				SysLog::log('normal','swipe return',$customer->id,$device->id,$event->id,'全區卡開門');
 				return $this->opendoor($device);
 			}
 		}
@@ -75,6 +77,7 @@ class RemoteController extends Controller {
 												->whereIn('device_id',$searchDevice)
 												->get()->count();
 		if($booking>0){
+			SysLog::log('normal','swipe return',$customer->id,$device->id,$event->id,'租借時段開門');
 			return $this->opendoor($device);
 		}
 		else{
@@ -87,7 +90,7 @@ class RemoteController extends Controller {
 												->whereIn('device_id',$searchDevice)
 												->get()->count();
 				if($over_booking>0){
-					Log::debug(__Function__.' 過時間關鐵捲門');
+					SysLog::log('normal','swipe return',$customer->id,$device->id,$event->id,'超時關門');
 					return $this->closedoor();
 				}
 			}

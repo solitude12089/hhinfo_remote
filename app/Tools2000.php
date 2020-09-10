@@ -1,8 +1,8 @@
 <?php
 
 namespace App;
-
-
+use App\SysLog;
+use Auth;
 class Tools2000 
 {
 
@@ -105,6 +105,8 @@ class Tools2000
         $path = '/api/v2/remote/rcode?token='.$token.$command.'&serverip'.$serverip;
        
         $rt = $this->httpGet($ip,$path);
+        $user = Auth::user();
+        SysLog::log('normal','device control',$user==null?'0':$user->id,$device->id,json_encode($setData));
         return $rt;
     }
 

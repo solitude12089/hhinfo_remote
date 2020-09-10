@@ -38,7 +38,7 @@ class SetDeviceTime extends Command
 	 */
 	public function handle()
 	{
-
+        $tools = new \App\Tools2000;
         $devices = \App\models\Device::where('status',1)->get();
         foreach ($devices as $device){
             $rt = $tools->setTime($device->id);
