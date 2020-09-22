@@ -27,8 +27,8 @@ class SystemLogController extends Controller
         //                                 ->where('type','!=','公用鐵捲門')
         //                                 ->get();
         // }
-
-        $systemlog = \App\models\Systemlog::with('user')
+            
+        $systemlog = \App\models\SystemLog::with('user')
                                             ->with('customer')
                                             ->with('device')
                                             ->take(500)
