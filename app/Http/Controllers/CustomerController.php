@@ -281,6 +281,25 @@ class CustomerController extends Controller
         return redirect('/customer/spcard')->with('alert-success', '規則修改成功.');
     }
 
+    public function postremovespcard(Request $request){
+        $user = Auth::user();
+        $data = $request->all();
+      
+        if(!isset($data['remove_id'])||$data['remove_id']==''){
+            return redirect('/customer/spcard')->with('alert-danger', '找不到項目,無法刪除.');
+        }
+       
+        $old_spcard = \App\models\Spcard::where('id','=',$data['remove_id'])
+                                        ->first();
+        if($old_spcard==null){
+            return redirect('/customer/spcard')->with('alert-danger', '找不到項目,無法刪除.');
+        }
+        $old_spcard->delete();
+        return redirect('/customer/spcard')->with('alert-success', '刪除成功.');
+    }
+
+
+
 
 
 }

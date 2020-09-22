@@ -32,6 +32,23 @@
 
                         </div>
                     </div>
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">內部IP</label>
+                        <div>
+                            <input id="local_ip" name="local_ip"  class="form-control" >
+
+                        </div>
+                    </div>
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">IP Mode</label>
+                        <div>
+                            <select  id="ip_mode" name="ip_mode" class="form-control chosen">
+                                <option value="固定">固定</option>
+                                <option value="Port Forwarding">Port Forwarding</option>
+                            </select>
+
+                        </div>
+                    </div>
 
                     <div class="form-group col-lg-12">
                         <label class="control-label">名稱</label>

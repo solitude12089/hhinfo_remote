@@ -16,7 +16,11 @@ class BookingController extends Controller
 
        
         $user = Auth::user();
-        $timeRanges = \App\models\TimeRange::all()->pluck('description', 'id')->toArray();
+        $_timeRanges = \App\models\TimeRange::all();
+        $timeRanges = [];
+        foreach ($_timeRanges as $key => $value){
+            $timeRanges[$value->id] = $value;
+        }
         $devices=[];
         $deviceMap = [];
         if (Auth::user()->role != 9) {
@@ -226,7 +230,6 @@ class BookingController extends Controller
     public function postQuery(Request $request)
     {
         $data = $request->all();
-     
         $whereRaw = ' where d.group_id = ' . $data['group'];
         $whereRaw = $whereRaw. ' and bh.date >= \'' .$data['startDate']. '\' and bh.date <= \'' .$data['endDate'].'\'';
         if($data['device']!=''){
@@ -235,11 +238,23 @@ class BookingController extends Controller
         if($data['customer']!=''){
             $whereRaw = $whereRaw. ' and c.id = \'' .$data['customer'].'\'';
         }
+        if($data['note']!=''){
+            $whereRaw = $whereRaw. ' and bh.description like \'%' .$data['note'].'%\'';
+        }
 
     
        
 
-        $sql = 'SELECT  bh.id as bh_id,c.id as user_id,c.name as user,c.phone,bh.range_id,tr.description as tr_description,bh.date,bh.description,d.id as device_id ,d.family,d.name,bh.aircontrol
+        $sql = 'SELECT  bh.id as bh_id,
+                        c.id as user_id,
+                        c.name as user,
+                        c.phone,bh.range_id,
+                        tr.description as tr_description,
+                        bh.date,
+                        bh.description,
+                        d.id as device_id,
+                        d.family,d.name,
+                        bh.aircontrol
                 FROM hhinfo_remote.booking_histories as bh
                 join hhinfo_remote.devices as d
                 on bh.device_id = d.id
@@ -255,7 +270,14 @@ class BookingController extends Controller
             $ckbok = '<input type=checkbox name="remove[]" value="'.$value->bh_id.'"></input>';
             // $action = '<button class="btn btn-danger btn-xs" target_id="'.$value->bh_id.'" onclick="remove(this)">刪除</button>';
             $rt_data[]=[
-                $ckbok,$value->user,$value->phone,$value->family.'-'.$value->name,$value->date,$value->tr_description,$value->aircontrol==0?'否':'是'
+                $ckbok,
+                $value->user,
+                $value->phone,
+                $value->family.'-'.$value->name,
+                $value->date,
+                $value->tr_description,
+                $value->description,
+                $value->aircontrol==0?'否':'是',
             ];
         }
      
@@ -280,6 +302,7 @@ class BookingController extends Controller
                                         ->where('type','!=','公用鐵捲門')
                                         ->get();
         }
+        $devices=[];
         foreach ($_devices as $key => $value) {
             $devices[$value->group_id][] = $value;
             # code...
@@ -292,7 +315,7 @@ class BookingController extends Controller
     {
         $data = $request->all();
 
-        $sql = 'SELECT  c.id as user_id,c.name as user,c.phone,bh.range_id,tr.start,tr.end,bh.date,bh.description,d.id as device_id ,d.family,d.name
+        $sql = 'SELECT  c.id as user_id,c.name as user,c.phone,bh.range_id,tr.start,tr.end,bh.date,bh.description,d.id as device_id ,d.family,d.name,bh.aircontrol
                 FROM hhinfo_remote.booking_histories as bh
                 join hhinfo_remote.devices as d
                 on bh.device_id = d.id
@@ -304,6 +327,7 @@ class BookingController extends Controller
                 order by bh.date,c.id,bh.range_id';
        
         $query = DB::select(DB::raw($sql));
+      
         $rt = [];
         foreach ($query as $key => $value) {
             $rt[$value->date][$value->user_id][] = $value;
@@ -314,10 +338,16 @@ class BookingController extends Controller
             foreach ($v as $k_user => $vv) {
                 $event = [];
                 foreach ($vv as $k => $vvv) {
-                  
                     if (isset($vv[$k + 1]) && $vv[$k + 1]->range_id == $vvv->range_id + 1) {
                         if($event==[]){
-                            $event['title'] = $vvv->user;
+                            if($vvv->aircontrol==1){
+                                $event['title'] = '(冷)'.$vvv->user;
+                             
+                            }
+                            else{
+                                $event['title'] = $vvv->user;
+                            }
+                            $event['note'] = $vvv->description;
                             $event['start'] = $k_date . ' ' . $vvv->start;
                         }
                     } else {
@@ -326,7 +356,15 @@ class BookingController extends Controller
                             $eventList[] = $event;
                             $event = [];
                         } else {
-                            $event['title'] = $vvv->user;
+                            if($vvv->aircontrol==1){
+                                $event['title'] = '(冷)'.$vvv->user;
+                              
+                            }
+                            else{
+                                $event['title'] = $vvv->user;
+
+                            }
+                            $event['note'] = $vvv->description;
                             $event['start'] = $k_date . ' ' . $vvv->start;
                             $event['end'] = $k_date . ' ' . $vvv->end;
                             $eventList[] = $event;

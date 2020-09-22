@@ -70,6 +70,7 @@ Route::group(['middleware' => 'auth'], function(){
 		Route::post('/create-spcard','CustomerController@postcreatespcard');
 		Route::get('/edit-spcard/{id}','CustomerController@geteditspcard');
 		Route::post('/edit-spcard/{id}','CustomerController@posteditspcard');
+		Route::post('/remove-spcard','CustomerController@postremovespcard');
 		Route::post('/checkcardid','CustomerController@checkcardid');
 	
 	});
@@ -102,6 +103,12 @@ Route::group(['middleware' => 'auth'], function(){
 
 		Route::post('/remove','BookingController@remove');
 	});
+
+	//SystemLog
+	Route::group(['prefix' => 'systemlog'], function () {
+		Route::get('/index','SystemLogController@index');
+	});
+
 
 
 	Route::get('/', function () {

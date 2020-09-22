@@ -16,15 +16,15 @@ class RemoteController extends Controller {
 	public function dcode(Request $request){
 		$data= $request->all();
 		$serverip = env('SERVER_IP');
-	
-		
 		Log::debug(__Function__.' get Data :'.json_encode($data));
 		if(!isset($data['txcode'])||!isset($data['controlip'])){
 			//return;
 			return response('serverip='.$serverip, 200)
                   ->header('Content-Type', 'text/plain');
 		}
-		$device = \App\models\Device::where('ip',$data['controlip'])->first();
+		$device = \App\models\Device::where('ip',$data['controlip'])
+									->orWhere('local_ip',$data['controlip'])
+									->first();
 		if($device===null){
 			//return 'Device Miss';
 			return response('serverip='.$serverip, 200)
@@ -36,6 +36,7 @@ class RemoteController extends Controller {
                   ->header('Content-Type', 'text/plain');
 		}
 		$customer = \App\models\Customer::where('card_uuid',$data['txcode'])
+										->where('status',1)
 										->first();
 		if($customer===null){
 			//return 'Customer Miss';

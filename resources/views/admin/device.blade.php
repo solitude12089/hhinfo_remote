@@ -14,6 +14,7 @@
 @parent
     <link href="/css/chosen/chosen.min.css" rel="stylesheet">
     <link href="/css/jquery-ui.css" rel="stylesheet">
+    <link href="/css/datatables.min.css" rel="stylesheet">
     <style>
         ul.ui-autocomplete {
             z-index: 1100;
@@ -43,6 +44,8 @@
                     <thead>
                         <tr>
                             <th>IP</th>
+                            <th>內部IP</th>
+                            <th>IP Mode</th>
                             <th>名稱</th>
                             <th>描述</th>
                             <th>群組</th>
@@ -58,6 +61,8 @@
                         @foreach($devices as $key => $device)
                         <tr>
                             <td>{{$device->ip}}</td>
+                            <td>{{$device->local_ip}}</td>
+                            <td>{{$device->ip_mode}}</td>
                             <td>{{$device->name}}</td>
                             <td>{{$device->description}}</td>
                             <td>{{$device->family}}</td>
@@ -110,7 +115,10 @@
 @section('script')
 <script src="/js/chosen/chosen.jquery.min.js"></script>
 <script src="/js/jquery-ui.js"></script>
+<script src="/js/datatables.min.js"></script>
+
 <script>
+    $('.dataTable').dataTable();
     var familys = <?php echo json_encode($familys); ?>;
     function action($obj){
             $($obj).attr('disabled', true);

@@ -13,7 +13,7 @@
 @section('style')
 @parent
     <link href="/css/chosen/chosen.min.css" rel="stylesheet">
-
+    <link href="/css/datatables.min.css" rel="stylesheet">
 @stop
 
 
@@ -100,6 +100,9 @@
 
 
 @section('script')
-<script src="/js/chosen/chosen.jquery.min.js"></script>
-
+    <script src="/js/chosen/chosen.jquery.min.js"></script>
+    <script src="/js/datatables.min.js"></script>
+    <script>
+         $('.dataTable').dataTable();
+    </script>
 @stop

@@ -34,7 +34,7 @@
         th{
             text-align:center;
         }
-       
+
         td{
             min-width:50px;
             max-width:90px;
@@ -47,8 +47,8 @@
         .pick-row{
             height: 50px;
         }
-       
-       
+
+
         .idle-select{
             background-color: green;
         }
@@ -58,13 +58,13 @@
         }
         .expired{
             background-color:darkgray;
-           
+
         }
 
     </style>
 
 @stop
-    
+
 
 @section('section')
 
@@ -89,7 +89,7 @@
                     </div>
 
                 </div>
-                
+
                 <div class="form-group col-lg-12">
                     <label class="control-label">地點</label>
                     <div>
@@ -105,7 +105,7 @@
                     <label class="control-label">預約日期</label>
                     <div>
                         <input  id="date" name="date" class="form-control">
-                          
+
 
                         </input>
 
@@ -117,7 +117,7 @@
                     <label class="control-label">特殊篩選-每逢</label>
                     <div>
                         <select  id="sp_pick" name="sp_pick[]" class="form-control chosen" multiple>
-                            
+
                             <option value="1">星期一</option>
                             <option value="2">星期二</option>
                             <option value="3">星期三</option>
@@ -138,7 +138,7 @@
                         <input type="button" id="search" class="btn btn-primary" value="查詢"></input>
                     </div>
                 </div>
-                    
+
                 <!-- /.box-body -->
             </form>
         </div>
@@ -190,14 +190,14 @@
                 </div>
 
              </form>
-           
+
         </div>
     </div>
     <!-- /.box-body -->
 </div>
 
 
- 
+
 
 
 @stop
@@ -215,7 +215,7 @@
         var timeRanges = <?php echo json_encode($timeRanges); ?>;
         var devices = <?php echo json_encode($devices); ?>;
         var deviceMap = <?php echo json_encode($deviceMap); ?>;
-        
+
 
         $('.chosen').chosen({
             width:"100%",
@@ -316,14 +316,14 @@
                     else{
                         $(this).addClass('idle-select');
                     }
-                  
+
                 });
                 // console.log(result);
               }
             });
         });
 
-        
+
         $('#btn_booking').click(function(){
             var t = $('.idle-select');
             if(t.length==0){
@@ -334,17 +334,18 @@
                 alert('請選擇租借人');
                 return;
             }
-
+            
+            var eventList = groupByRanges(t);
 
             var msg = '<div>租借人 : <label>'+$("#customer option:selected" ).text()+'<label></div>\
                     <div>是否租用冷氣 : <label>'+$("#aircontrol option:selected" ).text()+'<label></div>\
                     <div>預約時段 : </div><div>';
-            $.each(t,function(k,v){
-                msg = msg +'<div><label>'+ deviceMap[$(v).attr('place')].family+'-'+deviceMap[$(v).attr('place')].name +' , ' + $(v).attr('date') + ' : ' + timeRanges[$(v).attr('range')] + '</label></div>';
+            $.each(eventList,function(k,v){
+                msg = msg +'<div><label>'+ deviceMap[v.device].family+'-'+deviceMap[v.device].name +' , ' + v.date + ' : ' + timeRanges[v.start].start +' ~ '+ timeRanges[v.end].end + '</label></div>';
             });
             msg = msg + '<div>備註</div>\
                         <div><textarea cols="50" rows="5"></textarea></div>';
-            
+
             BootstrapDialog.confirm({
                 title: '確認預約',
                 message: msg,
@@ -365,17 +366,62 @@
                         });
 
                         $('#bookingform').submit();
-                        
+
                     }
                 }
             });
         });
-        
+
+        function groupByRanges(t){
+            var rtrr = [];
+            $.each(t,function(k,v){
+                if(rtrr[$(v).attr('place')]==null){
+                    rtrr[$(v).attr('place')]=[];
+                }
+                if(rtrr[$(v).attr('place')][$(v).attr('date')]==null){
+                    rtrr[$(v).attr('place')][$(v).attr('date')]=[];
+                }
+                rtrr[$(v).attr('place')][$(v).attr('date')].push($(v).attr('range'));
+            });
+            var eventList = [];
+            for(k_device in rtrr){
+                for(k_date in rtrr[k_device]){
+                        var event=[];
+                        for(k in rtrr[k_device][k_date]){
+                            k = parseInt(k);
+                            var range = rtrr[k_device][k_date][k];
+                            if(rtrr[k_device][k_date][k+1]!=null && parseInt(range)+1==rtrr[k_device][k_date][k+1]){
+                                if(Object.keys(event).length==0){
+                                    event['date'] = k_date;
+                                    event['device'] = k_device;
+                                    event['start'] = range;
+                                }
+                            }
+                            else{
+                                if(Object.keys(event).length!=0){
+                                    event['end'] = range;
+                                    eventList.push(event);
+                                    event = [];
+                                }
+                                else{
+                                        event['date'] = k_date;
+                                        event['device'] = k_device;
+                                        event['start'] = range;
+                                        event['end'] = range;
+                                        eventList.push(event);
+                                        event = [];
+                                }
+                            }
+                        }
+                }
+            }
+            return eventList;
+        }
 
 
 
     </script>
-  
+
 
 
 

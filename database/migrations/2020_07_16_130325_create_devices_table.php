@@ -16,6 +16,8 @@ class CreateDevicesTable extends Migration
         Schema::create('devices', function (Blueprint $table) {
             $table->increments('id');
             $table->string('ip');
+            $table->string('local_ip')->nullable();
+            $table->string('ip_mode')->default('固定');
             $table->string('name');
             $table->string('family');
             $table->text('description')->nullable();

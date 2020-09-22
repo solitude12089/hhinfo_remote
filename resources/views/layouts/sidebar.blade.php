@@ -90,6 +90,20 @@
 					</ul>
 
 			</li>
+			<li>
+					<a href="#">
+						<i class="fa  fa-cogs fa-fw"></i>系統紀錄
+						<span class="fa arrow"></span>
+					</a>
+					<ul class="nav nav-second-level">
+						<li>
+							<a href="{{ url ('/systemlog/index') }}">
+								<i class="fa fa-file-o fa-fw"></i>系統紀錄
+							</a>
+						</li>
+					</ul>
+
+			</li>
 
 		</ul>
 	</div>

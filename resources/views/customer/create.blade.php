@@ -27,7 +27,7 @@
         <form id='postform' action="{{url('/customer/store')}}" method="POST" enctype="multipart/form-data">
           
                     <div class="form-group col-lg-12">
-                        <label class="control-label">電話 (ex:0912345678)</label>
+                        <label class="control-label">電話 (ex:0912345678 or 0227861020)</label>
                         <div>
                             <input id="phone" name="phone"  class="form-control" >
 

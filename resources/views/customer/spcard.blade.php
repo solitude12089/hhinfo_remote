@@ -13,7 +13,7 @@
 @section('style')
 @parent
     <link href="/css/datatables.min.css" rel="stylesheet">
-
+    <link href="/css/bootstrap-dialog.min.css" rel="stylesheet">
 @stop
 
 
@@ -57,7 +57,8 @@
                                 @endforeach
                             </td>
                             <td>
-                                <a data-toggle="modal" data-target="#ajax-modal" href="/customer/edit-spcard/{{$spcard->id}}">編輯</a>
+                                <a class="btn btn-info btn-xs" data-toggle="modal" data-target="#ajax-modal" href="/customer/edit-spcard/{{$spcard->id}}">編輯</a>
+                                <button class="btn btn-danger btn-xs" value="{{$spcard->id}}" onclick="remove(this)" >刪除</button>
                             </td>
                         </tr>
                         @endforeach
@@ -73,13 +74,11 @@
     <!-- /.box-body -->
 
 
-     <div class="box-footer">
-
-       
-           
-               
-      
-    </div>
+    
+    <form id='remove_from' action="{{url('/customer/remove-spcard')}}" method="POST" enctype="multipart/form-data" hidden>
+            <input id="remove_id" name='remove_id'>
+    </form>
+  
 
 </div>
 
@@ -91,7 +90,40 @@
 
 @section('script')
     <script src="/js/datatables.min.js"></script>
+    <script src="/js/bootstrap-dialog.min.js"></script>
+    <script>
+    
+        function remove(obj){
+            console.log(obj);
+            var name = $($(obj).parents('tr').children('td')[1]).text();
+            BootstrapDialog.confirm({
+                title: '確認刪除',
+                message: '是否刪除 使用者 : '+name+' 全區卡設定?',
+                type: BootstrapDialog.TYPE_WARNING, // <-- Default value is BootstrapDialog.TYPE_PRIMARY
+                closable: true, // <-- Default value is false
+                draggable: true, // <-- Default value is false
+                btnCancelLabel: '取消', // <-- Default value is 'Cancel',
+                btnOKLabel: '確定', // <-- Default value is 'OK',
+                btnOKClass: 'btn-warning', // <-- If you didn't specify it, dialog type will be used,
+                callback: function(result) {
+                    console.log(result);
+                    // result will be true if button was click, while it will be false if users close the dialog directly.
+                    if(result) {
+                        $('#remove_id').val($(obj).val());
+                        $('#remove_from').submit();
+                        
+                    }
+                }
+            });
 
+        }
+
+    
+    
+    
+    
+    
+    </script>
 
 
 @stop

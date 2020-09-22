@@ -30,7 +30,7 @@
         th{
             text-align:center;
         }
-       
+
         td{
             min-height: 50px;
             text-align:center;
@@ -41,16 +41,112 @@
         .pick-row{
             height: 50px;
         }
-       
-       
+
+
         .idle-select{
             background-color: green;
+        }
+        .popper,
+        .tooltip {
+            position: absolute;
+            z-index: 9999;
+            background: #FFC107;
+            color: black;
+            width: 150px;
+            border-radius: 3px;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+            padding: 10px;
+            text-align: center;
+        }
+        .style5 .tooltip {
+            background: #1E252B;
+            color: #FFFFFF;
+            max-width: 200px;
+            width: auto;
+            font-size: .8rem;
+            padding: .5em 1em;
+        }
+        .popper .popper__arrow,
+        .tooltip .tooltip-arrow {
+            width: 0;
+            height: 0;
+            border-style: solid;
+            position: absolute;
+            margin: 5px;
+        }
+
+        .tooltip .tooltip-arrow,
+        .popper .popper__arrow {
+            border-color: #FFC107;
+        }
+        .style5 .tooltip .tooltip-arrow {
+            border-color: #1E252B;
+        }
+        .popper[x-placement^="top"],
+        .tooltip[x-placement^="top"] {
+            margin-bottom: 5px;
+        }
+        .popper[x-placement^="top"] .popper__arrow,
+        .tooltip[x-placement^="top"] .tooltip-arrow {
+            border-width: 5px 5px 0 5px;
+            border-left-color: transparent;
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+            bottom: -5px;
+            left: calc(50% - 5px);
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        .popper[x-placement^="bottom"],
+        .tooltip[x-placement^="bottom"] {
+            margin-top: 5px;
+        }
+        .tooltip[x-placement^="bottom"] .tooltip-arrow,
+        .popper[x-placement^="bottom"] .popper__arrow {
+            border-width: 0 5px 5px 5px;
+            border-left-color: transparent;
+            border-right-color: transparent;
+            border-top-color: transparent;
+            top: -5px;
+            left: calc(50% - 5px);
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        .tooltip[x-placement^="right"],
+        .popper[x-placement^="right"] {
+            margin-left: 5px;
+        }
+        .popper[x-placement^="right"] .popper__arrow,
+        .tooltip[x-placement^="right"] .tooltip-arrow {
+            border-width: 5px 5px 5px 0;
+            border-left-color: transparent;
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+            left: -5px;
+            top: calc(50% - 5px);
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .popper[x-placement^="left"],
+        .tooltip[x-placement^="left"] {
+            margin-right: 5px;
+        }
+        .popper[x-placement^="left"] .popper__arrow,
+        .tooltip[x-placement^="left"] .tooltip-arrow {
+            border-width: 5px 0 5px 5px;
+            border-top-color: transparent;
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+            right: -5px;
+            top: calc(50% - 5px);
+            margin-left: 0;
+            margin-right: 0;
         }
 
     </style>
 
 @stop
-    
+
 
 @section('section')
 
@@ -79,7 +175,7 @@
                     <label class="control-label">地點</label>
                     <div>
                         <select  id="device" name="device" class="form-control chosen">
-                       
+
                         </select>
                     </div>
 
@@ -89,9 +185,9 @@
                 <div class="form-group col-lg-12">
                     <label class="control-label">月份</label>
                     <div>
-                      
+
                         <input  id="date" name="date" value="{{date('Y-m')}}" class="form-control datepicker">
-                          
+
 
                         </input>
 
@@ -99,7 +195,7 @@
 
                 </div>
 
-              
+
 
 
                 <div class= "col-lg-12">
@@ -107,7 +203,7 @@
                         <input type="button" id="search" class="btn btn-primary" value="查詢"></input>
                     </div>
                 </div>
-                    
+
                 <!-- /.box-body -->
             </form>
         </div>
@@ -119,7 +215,10 @@
 <div class="box">
     <div class="box-header with-border">
         <h3 class="box-title">查詢結果</h3>
-        
+        <div id=calendar_control style="float:right">
+            <button id="c_left" class="btn btn-xs btn-primary" onclick="changePage('left')"><</button>
+            <button id="c_right" class="btn btn-xs btn-primary" onclick="changePage('right')">></button>
+        </div>
     </div>
     <!-- /.box-header -->
     <div class="box-body">
@@ -133,7 +232,7 @@
 </div>
 
 
- 
+
 
 
 @stop
@@ -146,9 +245,13 @@
     <script src="/js/bootstrap-datepicker.min.js"></script>
     <script src="/js/fullcalendar/main.min.js"></script>
     <script src="/js/fullcalendar/locales-all.min.js"></script>
+    <script src="/js/moment.min.js"></script>
+    <script src="https://unpkg.com/popper.js/dist/umd/popper.min.js"></script>
+
+    <script src="https://unpkg.com/tooltip.js/dist/umd/tooltip.min.js"></script>
     <script>
         var devices = <?php echo json_encode($devices); ?>;
-        
+
         $.fn.datepicker.dates['en'] = {
             days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
             daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -173,7 +276,7 @@
                     var newOption = $('<option value="'+f.id+'">'+f.name+'</option>');
                     $('#device').append(newOption);
             });
-          
+
             $('#device').trigger("chosen:updated");
         });
 
@@ -215,7 +318,7 @@
                         initialDate: date+'-01',
                         eventClassNames: 'myclassname',
                         editable: false,
-                        dayMaxEvents: true, 
+                        dayMaxEvents: true,
                         displayEventTime:true,
                         displayEventEnd:true,
                         eventTimeFormat:{
@@ -224,20 +327,37 @@
                             meridiem: false,
                             hour12: false
                         },
-                        events:result
+                        events:result,
+                        eventMouseEnter : function(info) {
+                           console.log(info);
+                           var tooltip = new Tooltip(info.el, {
+                                title: info.event.extendedProps.note,
+                                placement: 'top',
+                                trigger: 'hover',
+                                container: 'body'
+                            });
+                        }
                     });
                     calendar.render();
                 }
             });
         });
-             
- 
-       
+
+        function changePage(act){
+            if(act=='right'){
+                $('#date').val(moment($('#date').val(), "YYYY-MM").add(1, 'months').format('YYYY-MM'));
+            }
+            else{
+                $('#date').val(moment($('#date').val(), "YYYY-MM").add(-1, 'months').format('YYYY-MM'));
+            }
+            $('#search').trigger('click');
+        }
+
 
 
 
     </script>
-  
+
 
 
 

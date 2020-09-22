@@ -312,10 +312,20 @@ class AdminController extends Controller
         if($device!=null){
             return redirect('admin/device')->with('alert-danger', 'IP重複,無法建立.');
         }
+        if($data['ip_mode']!='固定'){
+            $device = \App\models\Device::where('local_ip',$data['local_ip'])
+                ->where('id','!=',$id)
+                ->first();
+            if($device!=null){
+                return redirect('admin/device')->with('alert-danger', '內部IP重複,無法修改.');
+            }
+        }
        
 
         $new_device = new \App\models\Device;
         $new_device->ip = $data['IP'];
+        $new_device->local_ip = $data['local_ip'];
+        $new_device->ip_mode = $data['ip_mode'];
         $new_device->name = $data['name'];
         $new_device->group_id = $data['group'];
         $new_device->family = $data['family'];
@@ -374,10 +384,22 @@ class AdminController extends Controller
             return redirect('admin/device')->with('alert-danger', 'IP重複,無法修改.');
         }
 
+        if($data['ip_mode']!='固定'){
+            $device = \App\models\Device::where('local_ip',$data['local_ip'])
+                ->where('id','!=',$id)
+                ->first();
+            if($device!=null){
+                return redirect('admin/device')->with('alert-danger', '內部IP重複,無法修改.');
+            }
+        }
+       
+
 
       
       
         $olddevice->ip = $data['IP'];
+        $olddevice->local_ip = $data['local_ip'];
+        $olddevice->ip_mode = $data['ip_mode'];
         $olddevice->name = $data['name'];
         $olddevice->group_id = $data['group'];
         $olddevice->family = $data['family'];

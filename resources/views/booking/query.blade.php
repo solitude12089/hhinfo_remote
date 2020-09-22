@@ -19,6 +19,7 @@
     <link href="/css/jquery-ui.css" rel="stylesheet">
     <link href="/css/bootstrap-dialog.min.css" rel="stylesheet">
 
+    
     <style>
         fieldset {
             border:0;
@@ -49,6 +50,40 @@
 
         .idle-select{
             background-color: green;
+        }
+        div.dt-buttons {
+            position: relative;
+            float: left;
+        }
+        button.dt-button, div.dt-button, a.dt-button, input.dt-button {
+            position: relative;
+            display: inline-block;
+            box-sizing: border-box;
+            margin-right: 0.333em;
+            margin-bottom: 0.333em;
+            padding: 0.5em 1em;
+            border: 1px solid rgba(0,0,0,0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 0.88em;
+            line-height: 1.6em;
+            color: black;
+            white-space: nowrap;
+            overflow: hidden;
+            background-color: rgba(0,0,0,0.1);
+            background: -webkit-linear-gradient(top, rgba(230,230,230,0.1) 0%, rgba(0,0,0,0.1) 100%);
+            background: -moz-linear-gradient(top, rgba(230,230,230,0.1) 0%, rgba(0,0,0,0.1) 100%);
+            background: -ms-linear-gradient(top, rgba(230,230,230,0.1) 0%, rgba(0,0,0,0.1) 100%);
+            background: -o-linear-gradient(top, rgba(230,230,230,0.1) 0%, rgba(0,0,0,0.1) 100%);
+            background: linear-gradient(to bottom, rgba(230,230,230,0.1) 0%, rgba(0,0,0,0.1) 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,StartColorStr='rgba(230, 230, 230, 0.1)', EndColorStr='rgba(0, 0, 0, 0.1)');
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            text-decoration: none;
+            outline: none;
+            text-overflow: ellipsis;
         }
 
     </style>
@@ -108,6 +143,15 @@
                     </div>
                 </div>
 
+                <div class="form-group col-lg-12">
+                    <label class="control-label">備註</label>
+                    <div>
+                        <input  id="note" name="note" class="form-control"></input>
+                    </div>
+                </div>
+
+                
+
 
 
                 <div class= "col-lg-12">
@@ -136,7 +180,7 @@
     <div class="box-body">
         
         <div class="row">
-            <table id='rt_table'>
+            <table id='rt_table' style="width:100%">
             </table>
 
         </div>
@@ -165,6 +209,11 @@
     <script src="/js/daterangepicker.js"></script>
     <script src="/js/jquery-ui.js"></script>
     <script src="/js/bootstrap-dialog.min.js"></script>
+
+    <script src="/js/dataTables.buttons.min.js"></script>
+    <script src="/js/jszip.min.js"></script>
+    <script src="/js/buttons.html5.min.js"></script>
+
 
     <script>
         var devices = <?php echo json_encode($devices); ?>;
@@ -247,7 +296,7 @@
             var startDate = $('#date').val().split(" - ")[0];
             var endDate = $('#date').val().split(" - ")[1];
             var customer = $('#customer').val();
-
+            var note = $('#note').val();
 
 
             $.ajax({
@@ -259,16 +308,27 @@
                     'startDate':startDate,
                     'endDate':endDate,
                     'customer':customer,
+                    'note' : note
                 },
             }).done(function(result) {
                     if(datatable==null){
                         datatable = $('#rt_table').DataTable({
                             pageLength: 50,
+                            dom: 'Bfrtip',
+                            buttons: [
+                                {
+                                    extend: 'excel',
+                                    title: '預約查詢_'+startDate+'_'+endDate
+                                   
+                                }
+                            ],
                             data: result,
+                            order: [[ 1, "asc" ]],
                             columns: [
                                 {
-                                    title:"",
-                                    width:"5%",
+                                    title:"<input type='checkbox' id='selectAll'></input>",
+                                    width:"7%",
+                                    orderable: false,
                                 },
                                 {
                                     title: "姓名",
@@ -288,6 +348,9 @@
                                     title: "租借時段"
                                 },
                                 {
+                                    title: "備註"
+                                },
+                                {
                                     title: "是否租借冷氣"
                                 },
                              
@@ -299,6 +362,11 @@
                         datatable.rows.add(result);
                         datatable.draw();
                     }
+
+                    $('#selectAll').on('click', function(){
+                        $('input:checkbox').not(this).prop('checked', this.checked);
+                        
+                    });
                    
             });
         });
