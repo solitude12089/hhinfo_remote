@@ -107,7 +107,7 @@ class Tools2000
         $rt = $this->httpGet($ip,$path);
         $user = Auth::user();
         if($user!=null)
-            SysLog::log('normal','device control',$user->id,$device->id,json_encode($setData));
+            SysLog::log('normal',$device->group_id,'device control',$user->id,$device->id,json_encode($setData));
         return $rt;
     }
 

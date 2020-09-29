@@ -15,8 +15,9 @@ class SysLog
 	* @return Array 
 	* 
 	*/
-    public static function log($type,$function_name,$user_id,$col1 =null,$col2=null,$col3=null,$col4=null,$col5=null){
+    public static function log($type,$group_id,$function_name,$user_id,$col1 =null,$col2=null,$col3=null,$col4=null,$col5=null){
         $systemlog = new \App\models\SystemLog;
+        $systemlog->group_id = $group_id;
         $systemlog->type = $type;
         $systemlog->function_name = $function_name;
         $systemlog->user_id = $user_id;
