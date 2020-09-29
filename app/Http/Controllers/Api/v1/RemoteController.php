@@ -58,7 +58,7 @@ class RemoteController extends Controller {
 
 		//Check bookongs
 		$searchDevice = [];
-		if($device->type=='鐵捲門'||$device->type=='公用鐵捲門'){
+		if($device->type=='公用鐵捲門'){
 			$searchDevice = \App\models\Device::where('group_id',$device->group_id)
 												->where('family',$device->family)
 												->where('status',1)

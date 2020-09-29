@@ -419,6 +419,17 @@
         }
 
 
+        function selectAll(obj){
+            var target = $(obj).val();
+            if(obj.checked){
+                $('.idle-'+target).addClass('idle-select');
+            }
+            else{
+                $('.idle-'+target).removeClass('idle-select');
+            }
+        }
+
+
 
     </script>
 

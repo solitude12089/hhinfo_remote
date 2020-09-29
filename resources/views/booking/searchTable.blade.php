@@ -4,8 +4,25 @@
 @foreach($devices as $key => $device)
 <fieldset>
 	<legend>{{$device->family.' - '.$device->name}}</legend>
+	<table  class="table table-bordered">
+			<thead>
+				 <tr>
+				 	@foreach($timeRanges as $tk =>$time)
+                    	<th>{{$time}}</th>
+                    @endforeach
+                </tr>
+			</thead>
+			<tbody>
+				<tr>
+					@foreach($timeRanges as $tk =>$time)
+                    	<th><input type="checkbox" value="{{$device->id}}-{{$tk}}" onclick="selectAll(this)"></th>
+                    @endforeach
+				</tr>
+			</tbody>
+	</table>
 	@foreach($ranges as $k => $date)
 		<h5>{{$date}}   {{isset($dayMap[$date])?$dayMap[$date]:''}}</h5>
+		
 		<table class="table table-bordered">
 			<thead>
 				 <tr>
@@ -23,7 +40,7 @@
 							@if($date<=$now['day']&&$tk<$now['range'])
 								<td class="expired"></td>
 							@else
-								<td class="idle" date="{{$date}}" range="{{$tk}}" place="{{$device->id}}"></td>
+								<td class="idle idle-{{$device->id}}-{{$tk}}" date="{{$date}}" range="{{$tk}}" place="{{$device->id}}"></td>
 							@endif
 						@endif
                     	
