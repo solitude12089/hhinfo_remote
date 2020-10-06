@@ -49,6 +49,11 @@ class RedoSchedule extends Command
 			$device = \App\models\Device::where('ip',$value->ip)
 										->first();
 
+			if($device==null){
+				$value->status= 8;
+				$value->save();
+				return;
+			}
 			$new_path  =  preg_replace("/token(.*?)&/",'token='.$token.'&',$value->path);
 			$rt = $tools->httpGet($value->ip,$new_path);
 			if($rt['result']==false){

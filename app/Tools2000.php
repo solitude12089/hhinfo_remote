@@ -9,7 +9,7 @@ class Tools2000
 
     function httpGet($ip,$path){
         try{
-
+            Log::debug(__Function__.' send Data : '.$ip.$path);
 
             $result = "";
             $res="";
@@ -39,7 +39,7 @@ class Tools2000
                 $rt_data = array_merge($rt_data,$arr);
             }
 
-
+            Log::debug(__Function__.' return Data : '.json_encode($rt_data));
 
             return [
                 'result' => true,
@@ -104,9 +104,9 @@ class Tools2000
         }
 
         $path = '/api/v2/remote/rcode?token='.$token.$command.'&serverip'.$serverip;
-        Log::debug(__Function__.' send Data : '.$ip.$path);
+        
         $rt = $this->httpGet($ip,$path);
-        Log::debug(__Function__.' return Data : '.$rt);
+       
         
 
 
