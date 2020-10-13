@@ -78,7 +78,7 @@
 							</a>
 
 							<a href="{{ url ('/booking/query') }}">
-								<i class="fa fa-search fa-fw"></i>租借查詢
+								<i class="fa fa-search fa-fw"></i>註銷預約
 							</a>
 
 							<a href="{{ url ('/booking/calendar') }}">

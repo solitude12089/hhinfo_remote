@@ -32,13 +32,24 @@
             overflow:auto;
         }
         th{
+            width:100px;
+            max-width:100px;
+            min-width:100px;
+            overflow:hidden;
+            height:50px;
+            max-height:50px;
+            min-height:50px;
             text-align:center;
         }
 
         td{
-            min-width:50px;
-            max-width:90px;
-            min-height: 50px;
+            width:100px;
+            max-width:100px;
+            min-width:100px;
+            overflow:hidden;
+            height:50px;
+            max-height:50px;
+            min-height:50px;
             text-align:center;
         }
         h5{

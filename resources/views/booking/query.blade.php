@@ -3,7 +3,7 @@
 'menu'=>1,
 'breadcrumb'=>[
 '租借管理' => '',
-'預約查詢' => Request::url()
+'註銷預約' => Request::url()
 
 ]
 ])
@@ -96,7 +96,7 @@
 
 <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title">預約查詢</h3>
+        <h3 class="box-title">註銷預約</h3>
     </div>
     <!-- /.box-header -->
     <div class="box-body">
