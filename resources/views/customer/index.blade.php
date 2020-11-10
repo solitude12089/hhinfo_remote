@@ -39,7 +39,7 @@
                         <tr>
                             <th>電話</th>
                             <th>名稱</th>
-                            <th>綁定悠遊卡</th>
+                            <th>卡號</th>
                             <th>狀態</th>
                             <th></th>
                         </tr>
@@ -51,8 +51,7 @@
                             <td>{{$customer->name}}</td>
                             <td>
                                 @if($customer->card_uuid!=null&&$customer->card_uuid!='')
-                                    <label style="color:green">V</label>
-                              
+                                    {{$customer->card_uuid}}
                                 @endif
                             </td>
                             <td>

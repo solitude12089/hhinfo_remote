@@ -35,6 +35,8 @@ class RemoteController extends Controller {
 			return response('serverip='.$serverip, 200)
                   ->header('Content-Type', 'text/plain');
 		}
+
+		$event = SysLog::log('normal',$device->group_id,'swipe event',0,$device->id,$data['txcode']);
 		$customer = \App\models\Customer::where('card_uuid',$data['txcode'])
 										->where('status',1)
 										->first();

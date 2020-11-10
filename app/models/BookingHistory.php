@@ -15,4 +15,9 @@ class BookingHistory extends Model
     {
         return $this->hasOne('\App\models\Customer', 'id', 'customer_id');
     }
+
+    public function device()
+    {
+        return $this->hasOne('\App\models\Device', 'id', 'device_id');
+    }
 }

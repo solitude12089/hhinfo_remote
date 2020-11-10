@@ -14,26 +14,20 @@ class SystemLogController extends Controller
     public function index()
     {
         $user = Auth::user();
-        // if (Auth::user()->role != 9) {
-        //     $ugp = $user->userGroupList->pluck('group_id')->toArray();
-        //     $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
-        //     $_devices = \App\models\Device::whereIn('group_id', $ugp)
-        //                                    ->where('status',1)
-        //                                    ->where('type','!=','公用鐵捲門')
-        //                                    ->get();
-        // } else {
-        //     $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
-        //     $_devices = \App\models\Device::where('status',1)
-        //                                 ->where('type','!=','公用鐵捲門')
-        //                                 ->get();
-        // }
-            
+
         $systemlog = \App\models\SystemLog::with('user')
-                                            ->with('customer')
-                                            ->with('device')
-                                            ->take(500)
-                                            ->orderBy('created_at','DESC')
-                                            ->get();
+                                        ->with('customer')
+                                        ->with('device');
+                                        
+
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $systemlog = $systemlog->whereIn('group_id', $ugp);
+        }
+            
+        $systemlog = $systemlog->take(500)
+                                ->orderBy('created_at','DESC')
+                                ->get();
 
         $rt_data = [];
         foreach ($systemlog as $key => $value){
@@ -84,7 +78,7 @@ class SystemLogController extends Controller
                     $rt_data[] = [
                         'date' => $value->created_at,
                         'user' => $value->customer==null?'':$value->customer->name,
-                        'action' => '刷卡',
+                        'action' => '有效刷卡',
                         'target' => $value->device->family.'-'.$value->device->name,
                         'msg' => '刷卡'
                     ];
@@ -99,6 +93,15 @@ class SystemLogController extends Controller
                         'msg' => $value->col3
                     ];
                     break;
+                case 'swipe event':
+                    $rt_data[] = [
+                        'date' => $value->created_at,
+                        'user' => '',
+                        'action' => '刷卡事件',
+                        'target' => $value->device->family.'-'.$value->device->name,
+                        'msg' => $value->col2
+                    ];
+                break;
             }
         }
 

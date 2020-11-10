@@ -33,7 +33,7 @@ class Kernel extends ConsoleKernel
         //          ->hourly();
 
         $schedule->command('command:setdevice')
-                ->hourly()
+                ->cron('0 * * * *')
                 ->withoutOverlapping();
         $schedule->command('command:setdevicetime')
                 ->cron('0 */2 * * *')
