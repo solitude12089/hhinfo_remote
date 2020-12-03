@@ -14,7 +14,6 @@ class BookingController extends Controller
     public function index()
     {
 
-       
         $user = Auth::user();
         $_timeRanges = \App\models\TimeRange::all();
         $timeRanges = [];

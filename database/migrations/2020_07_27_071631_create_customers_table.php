@@ -18,6 +18,7 @@ class CreateCustomersTable extends Migration
             $table->string('name');
             $table->string('phone')->unique();
             $table->string('card_uuid')->nullable();
+            $table->string('phone_uuid')->nullable();
             $table->integer('status')->default(1);
             $table->timestamps();
         });

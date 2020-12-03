@@ -36,7 +36,7 @@ class RemoteController extends Controller {
                   ->header('Content-Type', 'text/plain');
 		}
 
-		$event = SysLog::log('normal',$device->group_id,'swipe event',0,$device->id,$data['txcode']);
+		$e_swipe_event = SysLog::log('normal',$device->group_id,'swipe event',0,$device->id,$data['txcode']);
 		$customer = \App\models\Customer::where('card_uuid',$data['txcode'])
 										->where('status',1)
 										->first();
@@ -46,13 +46,13 @@ class RemoteController extends Controller {
                   ->header('Content-Type', 'text/plain');
 		}
 
-		$event = SysLog::log('normal',$device->group_id,'swipe card',$customer->id,$device->id);
+		$e_swipe_card = SysLog::log('normal',$device->group_id,'swipe card',$customer->id,$device->id,$e_swipe_event->id);
 		
 		//Check White list
 		$spcard = \App\models\Spcard::where('customer_id',$customer->id)->first();
 		if($spcard!=null){
 			if(in_array($device->family,$spcard->family)&&$device->group_id ==$spcard->group_id){
-				SysLog::log('normal',$device->group_id,'swipe return',$customer->id,$device->id,$event->id,'全區卡開門');
+				SysLog::log('normal',$device->group_id,'swipe return',$customer->id,$device->id,$e_swipe_event->id,'全區卡開門');
 				return $this->opendoor($device);
 			}
 		}
@@ -80,7 +80,7 @@ class RemoteController extends Controller {
 												->whereIn('device_id',$searchDevice)
 												->get()->count();
 		if($booking>0){
-			SysLog::log('normal',$device->group_id,'swipe return',$customer->id,$device->id,$event->id,'租借時段開門');
+			SysLog::log('normal',$device->group_id,'swipe return',$customer->id,$device->id,$e_swipe_event->id,'租借時段開門');
 			return $this->opendoor($device);
 		}
 		else{
@@ -93,7 +93,7 @@ class RemoteController extends Controller {
 												->whereIn('device_id',$searchDevice)
 												->get()->count();
 				if($over_booking>0){
-					SysLog::log('normal',$device->group_id,'swipe return',$customer->id,$device->id,$event->id,'超時關門');
+					SysLog::log('normal',$device->group_id,'swipe return',$customer->id,$device->id,$e_swipe_event->id,'超時關門');
 					return $this->closedoor();
 				}
 			}

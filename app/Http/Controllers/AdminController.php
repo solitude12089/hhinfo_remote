@@ -314,7 +314,6 @@ class AdminController extends Controller
         }
         if($data['ip_mode']!='固定'){
             $device = \App\models\Device::where('local_ip',$data['local_ip'])
-                ->where('id','!=',$id)
                 ->first();
             if($device!=null){
                 return redirect('admin/device')->with('alert-danger', '內部IP重複,無法修改.');

@@ -119,13 +119,16 @@ Route::group(['middleware' => 'auth'], function(){
 
 
 Route::group(['prefix' => '/api/v1'], function () {
-		Route::get('/customer/test', '\App\Http\Controllers\Api\v1\CustomerController@test');
- 		Route::post('/customer/registered', '\App\Http\Controllers\Api\v1\CustomerController@registered');
- 		Route::post('/customer/verify', '\App\Http\Controllers\Api\v1\CustomerController@verify');
-
+		// Route::get('/customer/test', '\App\Http\Controllers\Api\v1\CustomerController@test');
+ 		Route::post('/phone/registered', '\App\Http\Controllers\Api\v1\PhoneController@registered');
+		Route::post('/phone/verify', '\App\Http\Controllers\Api\v1\PhoneController@verify');
+		Route::post('/phone/menu', '\App\Http\Controllers\Api\v1\PhoneController@menu');
+		Route::post('/phone/btnclick', '\App\Http\Controllers\Api\v1\PhoneController@btnclick');
 
  		Route::get('/remote/dcode', '\App\Http\Controllers\Api\v1\RemoteController@dcode');
  		Route::get('/remote/operdo', '\App\Http\Controllers\Api\v1\RemoteController@operdo');
  	
 });
+
+
 
