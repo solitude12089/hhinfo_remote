@@ -1,57 +1,25 @@
-@extends('layouts.dashboard',[
-'page_title'=>'',
-'menu'=>1,
-'breadcrumb'=>[
-'客戶管理' => '',
-'客戶列表' => Request::url()
-
-]
-])
-
-
-
-@section('style')
-@parent
-    <link href="/css/datatables.min.css" rel="stylesheet">
-    <link href="/css/bootstrap-dialog.min.css" rel="stylesheet">
-@stop
-
-
-@section('section')
-
-
-
-</div>
-<div style="width: 500px" id="reader"></div>
-</div>
-
-
-@stop
-
-
-
-
-@section('script')
-    <script src="/js/html5-qrcode.min.js"></script>
-    <script src="/js/datatables.min.js"></script>
-    <script src="/js/bootstrap-dialog.min.js"></script>
-    <script>
-      
-
-
-
-        var html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader", { fps: 10, qrbox: 250 }
-        );
-                
-        function onScanSuccess(qrCodeMessage) {
-            // handle on success condition with the decoded message
-            alert(qrCodeMessage);
-            html5QrcodeScanner.clear();
-            // ^ this will stop the scanner (video feed) and clear the scan area.
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Instascan</title>
+    <script type="text/javascript" src="/js/instascan-master/instascan.min.js"></script>
+  </head>
+  <body>
+    <video id="preview"></video>
+    <script type="text/javascript">
+      let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+      scanner.addListener('scan', function (content) {
+        console.log(content);
+      });
+      Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length > 0) {
+          scanner.start(cameras[0]);
+        } else {
+          console.error('No cameras found.');
         }
-
-        html5QrcodeScanner.render(onScanSuccess);
+      }).catch(function (e) {
+        console.error(e);
+      });
     </script>
-
-@stop
+  </body>
+</html>
