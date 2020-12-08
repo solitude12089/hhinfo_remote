@@ -120,6 +120,9 @@ Route::group(['middleware' => 'auth'], function(){
 
 Route::group(['prefix' => '/api/v1'], function () {
 		// Route::get('/customer/test', '\App\Http\Controllers\Api\v1\CustomerController@test');
+
+		Route::get('/phone/test', '\App\Http\Controllers\Api\v1\PhoneController@test');
+
  		Route::post('/phone/registered', '\App\Http\Controllers\Api\v1\PhoneController@registered');
 		Route::post('/phone/verify', '\App\Http\Controllers\Api\v1\PhoneController@verify');
 		Route::post('/phone/menu', '\App\Http\Controllers\Api\v1\PhoneController@menu');

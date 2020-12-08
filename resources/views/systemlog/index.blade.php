@@ -69,26 +69,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <table class='table dataTable'>
-                    <thead>
-                        <tr>
-                            <th>時間</th>
-                            <th>人員</th>
-                            <th>動作</th>
-                            <th>裝置</th>
-                            <th>內容</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($rt_data as $key => $value)
-                        <tr>
-                            <td>{{$value['date']}}</td>
-                            <td>{{$value['user']}}</td>
-                            <td>{{$value['action']}}</td>
-                            <td>{{$value['target']}}</td>
-                            <td>{{$value['msg']}}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
+                   
                 </table>
                
             </div>
@@ -122,17 +103,37 @@
     <script src="/js/buttons.html5.min.js"></script>
     <script src="/js/moment.min.js"></script>
     <script>
+        var rt_data = <?php echo json_encode($rt_data); ?>;
          $('.dataTable').DataTable({
-            "pageLength": 50,
+            pageLength: 50,
+            data: rt_data,
+            columns: [
+                {
+                    title: "時間",
+                },
+                {
+                    title: "人員",
+                },
+                {
+                    title: "裝置",
+                },
+                {
+                    title: "動作",
+                },
+                
+                {
+                    title: "內容",
+                },
+            ],
             dom: 'Bfrtip',
-            "order": [[ 0, 'desc' ]],
-            "buttons": [
-                                {
-                                    extend: 'excel',
-                                    title: '系統紀錄_'+moment().format("YYYYMMDD")
-                                   
-                                }
-                            ],
+            order: [[ 0, 'desc' ]],
+            buttons: [
+                            {
+                                extend: 'excel',
+                                title: '系統紀錄_'+moment().format("YYYYMMDD")
+                                
+                            }
+                        ],
          });
     </script>
 

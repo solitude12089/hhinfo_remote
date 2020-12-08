@@ -10,6 +10,25 @@ use Exception;
 use DatePeriod;
 use DateInterval;
 class PhoneController extends Controller {
+
+	public function __construct()
+    {
+        $this->btnMap = [
+			'btn_r1_on' => '鐵捲門-開/關',
+			'btn_r1_off' => '鐵捲門-開/關',
+			'btn_r2_on'=> '一般門-開',
+			'btn_r2_off' =>'一般門-關',
+			'btn_r3_on'=> '一般用電-開',
+			'btn_r3_off' =>'一般用電-關',
+			'btn_r4_on'=> '冷氣用電-開',
+			'btn_r4_off' =>'冷氣用電-關',
+		];
+	}
+	
+	public function test(){
+		return view('test.index');
+	}
+
 	public function registered(Request $request){
 		try{
 			$data = $request->all();
@@ -171,6 +190,7 @@ class PhoneController extends Controller {
 	public function menu(Request $request){
 		try{
 			$data = $request->all();
+			\Log::debug(__CLASS__.' '.json_encode($data));
 			if(!isset($data['uuid'])||$data['uuid']==''){
 				throw new Exception('請先註冊登入.');
 			}
@@ -192,10 +212,10 @@ class PhoneController extends Controller {
 									'device_id' => $device->id,
 									'display_name' => $device->family.'-'.$device->name,
 									'menu' =>[
-										'btn_r1_on',
-										'btn_r1_off',
-										'btn_r2_on',
-										'btn_r2_off'
+										'btn_r1_on' => $this->btnMap['btn_r1_on'],
+										'btn_r1_off'=> $this->btnMap['btn_r1_off'],
+										'btn_r2_on'=> $this->btnMap['btn_r2_on'],
+										'btn_r2_off'=> $this->btnMap['btn_r2_off']
 									]
 								];
 							}
@@ -217,36 +237,38 @@ class PhoneController extends Controller {
 						'device_id' => $booking->device->id,
 						'display_name' => $booking->device->family.'-'.$booking->device->name,
 						'menu' =>[
-							'btn_r1_on',
-							'btn_r1_off',
-							'btn_r2_on',
-							'btn_r2_off'
+							'btn_r1_on' => $this->btnMap['btn_r1_on'],
+							'btn_r1_off'=> $this->btnMap['btn_r1_off'],
+							'btn_r2_on'=> $this->btnMap['btn_r2_on'],
+							'btn_r2_off'=> $this->btnMap['btn_r2_off']
 						]
 					];
 				}
 			}
 
 			//過時間關鐵捲門
-			if($device->type=='公用鐵捲門'||$device->type=='鐵捲門'){
-				$over_bookings = \App\models\BookingHistory::with('device')
-												->where('date',$toDay)
-												->where('range_id','<=',$nowRanges)
-												->where('status',1)
-												->where('customer_id',$customer->id)
-												->get();
-				if(count($over_bookings)>0){
-					foreach ($over_bookings as $obk => $obooking){
+			
+			$over_bookings = \App\models\BookingHistory::with('device')
+											->where('date',$toDay)
+											->where('range_id','<',$nowRanges)
+											->where('status',1)
+											->where('customer_id',$customer->id)
+											->get();
+			if(count($over_bookings)>0){
+				foreach ($over_bookings as $obk => $obooking){
+					if($obooking->device->type=='公用鐵捲門'||$obooking->device->type=='鐵捲門'){
 						$rt_menu[] = [
 							'device_id' => $booking->device->id,
 							'display_name' => $booking->device->family.'-'.$booking->device->name,
 							'menu' =>[
-								'btn_r1_off',
-								'btn_r2_off'
+								'btn_r1_off'=> $this->btnMap['btn_r1_off'],
+								'btn_r2_off'=> $this->btnMap['btn_r2_off']
 							]
 						];
 					}
 				}
 			}
+			
 		
 			
 			return response()->json(

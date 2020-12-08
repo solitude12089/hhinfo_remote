@@ -30,6 +30,7 @@ class SystemLogController extends Controller
                                 ->get();
 
         $rt_data = [];
+        $temp_queue = [];
         foreach ($systemlog as $key => $value){
             switch($value->function_name){
                 case 'device control':
@@ -66,45 +67,98 @@ class SystemLogController extends Controller
                         }
                     }
                    
+                    // $rt_data[] = [
+                    //     'date' => $value->created_at,
+                    //     'user' => $value->user_id==0?'系統':$value->user->name,
+                    //     'action' => '遠端操作',
+                    //     'target' => $value->device->family.'-'.$value->device->name,
+                    //     'msg' => $msg
+                    // ];
                     $rt_data[] = [
-                        'date' => $value->created_at,
-                        'user' => $value->user_id==0?'系統':$value->user->name,
-                        'action' => '遠端操作',
-                        'target' => $value->device->family.'-'.$value->device->name,
-                        'msg' => $msg
+                        $value->created_at->format('Y-m-d H:i:s'),
+                        $value->user_id==0?'系統':$value->user->name,
+                        $value->device->family.'-'.$value->device->name,
+                        '遠端操作',
+                        $msg
                     ];
                     break;
                 case 'swipe card':
-                    $rt_data[] = [
-                        'date' => $value->created_at,
-                        'user' => $value->customer==null?'':$value->customer->name,
-                        'action' => '有效刷卡',
-                        'target' => $value->device->family.'-'.$value->device->name,
-                        'msg' => '刷卡'
-                    ];
+                    // $rt_data[] = [
+                    //     'date' => $value->created_at,
+                    //     'user' => $value->customer==null?'':$value->customer->name,
+                    //     'action' => '有效刷卡',
+                    //     'target' => $value->device->family.'-'.$value->device->name,
+                    //     'msg' => '刷卡'
+                    // ];
+
+
+                    if($value->col2!==null){
+                        $temp_queue[$value->col2]['action'][] = '有效刷卡';
+                        $temp_queue[$value->col2]['msg'][] = '合法卡';
+                        $temp_queue[$value->col2]['user'] = $value->customer==null?'':$value->customer->name;
+                    }
                  
                     break;
                 case 'swipe return':
-                    $rt_data[] = [
-                        'date' => $value->created_at,
-                        'user' => $value->customer==null?'':$value->customer->name,
-                        'action' => '刷卡回應',
-                        'target' => $value->device->family.'-'.$value->device->name,
-                        'msg' => $value->col3
-                    ];
+                    // $rt_data[] = [
+                    //     'date' => $value->created_at,
+                    //     'user' => $value->customer==null?'':$value->customer->name,
+                    //     'action' => '刷卡回應',
+                    //     'target' => $value->device->family.'-'.$value->device->name,
+                    //     'msg' => $value->col3
+                    // ];
+                    if($value->col2!==null){
+                        $temp_queue[$value->col2]['action'][] = '刷卡回應';
+                        $temp_queue[$value->col2]['msg'][] = $value->col3;
+                        $temp_queue[$value->col2]['user'] = $value->customer==null?'':$value->customer->name;
+                    }
+                   
                     break;
                 case 'swipe event':
-                    $rt_data[] = [
-                        'date' => $value->created_at,
-                        'user' => '',
-                        'action' => '刷卡事件',
-                        'target' => $value->device->family.'-'.$value->device->name,
-                        'msg' => $value->col2
-                    ];
+                    // $rt_data[] = [
+                    //     'date' => $value->created_at,
+                    //     'user' => '',
+                    //     'action' => '刷卡事件',
+                    //     'target' => $value->device->family.'-'.$value->device->name,
+                    //     'msg' => $value->col2
+                    // ];
+
+                    $temp_queue[$value->id]['date'] = $value->created_at->format('Y-m-d H:i:s');
+                    $temp_queue[$value->id]['action'][] = '刷卡事件';
+                    $temp_queue[$value->id]['target'] = $value->device->family.'-'.$value->device->name;
+                    $temp_queue[$value->id]['msg'][] = '卡號 : '.$value->col2;
+                    if(!isset($temp_queue[$value->id]['user'])){
+                        $temp_queue[$value->id]['user'] = '';
+                    }
                 break;
             }
         }
 
+        foreach($temp_queue as $tk => $tv){
+            // $rt_data[] = [
+                    //     'date' => $value->created_at,
+                    //     'user' => $value->customer==null?'':$value->customer->name,
+                    //     'action' => '刷卡回應',
+                    //     'target' => $value->device->family.'-'.$value->device->name,
+                    //     'msg' => $value->col3
+                    // ];
+            $action='';
+            $msg = '';
+            foreach($tv['action'] as $tvak => $tvav){
+                $action = $action.$tvav.'<br>';
+            }
+            foreach($tv['msg'] as $tvmk => $tvmv){
+                $msg = $msg.$tvmv.'<br>';
+            }
+            $rt_data[] = [
+                $tv['date'],
+                $tv['user'],
+                $tv['target'],
+                $action,
+                $msg
+            ];
+        }
+     
         return view('systemlog.index',['rt_data' => $rt_data]);
 
       
