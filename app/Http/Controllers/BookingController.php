@@ -49,7 +49,7 @@ class BookingController extends Controller
     public function postSearch(Request $request)
     {
         $data = $request->all();
-      
+       
         $devices = \App\models\Device::with(['BookingHistory' => function ($q) use ($data) {
             $q->where('date', '>=', $data['startDate'])
                 ->where('date', '<=', $data['endDate']);
@@ -62,7 +62,6 @@ class BookingController extends Controller
             $devices = $devices->where('id', '=', $data['device']);
         }
         $devices=$devices->get();
-
         foreach ($devices as $key => $device) {
             $mark = [];
             foreach ($device->BookingHistory as $k => $bh) {
@@ -391,11 +390,11 @@ class BookingController extends Controller
             new DateInterval('P1D'),
             new DateTime($end)
         );
-
+       
         foreach ($period as $date) {
             $array[] = $date->format('Y-m-d');
         }
-
+        $array[] = $end;
         return $array;
     }
 

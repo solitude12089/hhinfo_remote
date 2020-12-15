@@ -90,6 +90,9 @@
                     <a  href="/customer/index">客戶管理</a>
                     <a  href="/remote/index">遠端操作</a>
                     <a  href="/booking/index">租借功能</a>
+                    @if (Auth::check()&&Auth::user()->role==9)
+                    <a  href="/systemlog/index">系統紀錄</a>
+                    @endif
                  
                 </div>
                 <div style="padding: 100px;">

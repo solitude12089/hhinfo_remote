@@ -171,7 +171,8 @@ class CustomerController extends Controller
     public function list(Request $request){
         $data = $request->all();
         $customers = \App\models\Customer::where('phone','like',$data['search'].'%')
-                                            ->get();
+                                        ->orWhere('name','like','%'.$data['search'].'%')
+                                        ->get();
         $rt = [];
         foreach ($customers as $customer){
             $rt[$customer->id] = $customer->phone.' - '.$customer->name;

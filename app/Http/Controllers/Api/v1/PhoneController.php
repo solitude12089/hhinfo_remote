@@ -212,10 +212,22 @@ class PhoneController extends Controller {
 									'device_id' => $device->id,
 									'display_name' => $device->family.'-'.$device->name,
 									'menu' =>[
-										'btn_r1_on' => $this->btnMap['btn_r1_on'],
-										'btn_r1_off'=> $this->btnMap['btn_r1_off'],
-										'btn_r2_on'=> $this->btnMap['btn_r2_on'],
-										'btn_r2_off'=> $this->btnMap['btn_r2_off']
+										(object)[
+											'id' => 'btn_r1_on',
+											'name' => $this->btnMap['btn_r1_on']
+										],
+										(object)[
+											'id' => 'btn_r1_off',
+											'name' => $this->btnMap['btn_r1_off']
+										],
+										(object)[
+											'id' => 'btn_r2_on',
+											'name' => $this->btnMap['btn_r2_on']
+										],
+										(object)[
+											'id' => 'btn_r2_off',
+											'name' => $this->btnMap['btn_r2_off']
+										]
 									]
 								];
 							}
@@ -237,10 +249,22 @@ class PhoneController extends Controller {
 						'device_id' => $booking->device->id,
 						'display_name' => $booking->device->family.'-'.$booking->device->name,
 						'menu' =>[
-							'btn_r1_on' => $this->btnMap['btn_r1_on'],
-							'btn_r1_off'=> $this->btnMap['btn_r1_off'],
-							'btn_r2_on'=> $this->btnMap['btn_r2_on'],
-							'btn_r2_off'=> $this->btnMap['btn_r2_off']
+							(object)[
+								'id' => 'btn_r1_on',
+								'name' => $this->btnMap['btn_r1_on']
+							],
+							(object)[
+								'id' => 'btn_r1_off',
+								'name' => $this->btnMap['btn_r1_off']
+							],
+							(object)[
+								'id' => 'btn_r2_on',
+								'name' => $this->btnMap['btn_r2_on']
+							],
+							(object)[
+								'id' => 'btn_r2_off',
+								'name' => $this->btnMap['btn_r2_off']
+							]
 						]
 					];
 				}
@@ -291,10 +315,128 @@ class PhoneController extends Controller {
 
 
 	public function btnclick(Request $request){
-		return response()->json(
-			array(
-				'status' =>1
+		try{
+			$data = $request->all();
+			Log::debug(__Function__.' get Data :'.json_encode($data));
+			if(!isset($data['uuid'])||$data['uuid']==''){
+				throw new Exception('請先註冊登入.');
+			}
+			$customer = \App\models\Customer::where('phone_uuid',$data['uuid'])->first();
+			if($customer===null){
+				throw new Exception('找不到該使用者.');
+			}
+			
+			if(!isset($data['device_id'])||$data['device_id']==''){
+				throw new Exception('Miss device ID.');
+			}
+			$device = \App\models\Device::where('id',$data['device_id'])->first();
+			if($device ===null){
+				throw new Exception('找不到裝置,請確認裝置ID.');
+			}
+
+			if(!isset($data['btn_name'])||$data['btn_name']==''){
+				throw new Exception('Miss btn name.');
+			}
+
+
+			//check_authority
+			$allow = false;
+			$spcard = \App\models\Spcard::where('customer_id',$customer->id)->first();
+			if($spcard!=null){
+				if(in_array($device->family,$spcard->family)&&$device->group_id ==$spcard->group_id){
+					$allow = true;
+				}
+			}
+
+
+			$searchDevice = [];
+			if($device->type=='公用鐵捲門'){
+				$searchDevice = \App\models\Device::where('group_id',$device->group_id)
+													->where('family',$device->family)
+													->where('status',1)
+													->get()
+													->pluck('id')
+													->toArray();
+				
+			}else{
+				$searchDevice=[$device->id];
+			}
+			$nowRanges = date('H');
+			$toDay = date('Y-m-d');
+			$booking = \App\models\BookingHistory::where('date',$toDay)
+													->where('range_id',$nowRanges)
+													->where('status',1)
+													->where('customer_id',$customer->id)
+													->whereIn('device_id',$searchDevice)
+													->get()->count();
+			if($booking>0){
+				$allow = true;
+			}
+			else{
+				//過時間關鐵捲門
+				if($device->type=='公用鐵捲門'||$device->type=='鐵捲門'){
+					$over_booking = \App\models\BookingHistory::where('date',$toDay)
+													->where('range_id','<=',$nowRanges)
+													->where('status',1)
+													->where('customer_id',$customer->id)
+													->whereIn('device_id',$searchDevice)
+													->get()->count();
+					if($over_booking>0){
+						$allow= true;
+					}
+				}
+			}
+
+			if($allow){
+				$setData =[];
+				switch($data['btn_name']){
+					case 'btn_r1_on':
+						$setData[1]="255";
+					break;
+					case 'btn_r1_off':
+						$setData[1]="0";
+					break;
+					case 'btn_r2_on':
+						$setData[2]="255";
+					break;
+					case 'btn_r2_off':
+						$setData[2]="0";
+					break;
+					case 'btn_r3_on':
+						$setData[3]="255";
+					break;
+					case 'btn_r3_off':
+						$setData[3]="0";
+					break;
+					case 'btn_r4_on':
+						$setData[4]="255";
+					break;
+					case 'btn_r4_off':
+						$setData[4]="0";
+					break;
+				}
+				$tools = new \App\Tools2000;
+				$rt = $tools->setStatus($device->id,$setData);
+				return response()->json(
+					array(
+						'status' =>1
+					), 200);
+			}
+			else{
+				return response()->json(array(
+					'status' =>0, 
+					'msg' => '無操作權限.'
+				), 200);
+			}
+
+		}
+		catch(Exception $e){
+			return response()->json(array(
+				'status' =>0, 
+				'msg' => $e->getMessage()
 			), 200);
+		}
+		
 	}
 
 

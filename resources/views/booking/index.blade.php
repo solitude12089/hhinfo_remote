@@ -242,7 +242,7 @@
             ajax_data: {
                 phone: $('#customer').val()
             },       // To set extra data + {search field}
-            ajax_min_chars: 4                               // Minimum characters to send ajax request
+            ajax_min_chars: 3                               // Minimum characters to send ajax request
         });
 
         $(".chosen-select").on('change', function(evt, params) {
