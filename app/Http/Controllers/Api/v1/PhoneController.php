@@ -13,11 +13,18 @@ class PhoneController extends Controller {
 
 	public function __construct()
     {
-        $this->btnMap = [
-			'btn_r1_on' => '鐵捲門-開/關',
-			'btn_r1_off' => '鐵捲門-開/關',
-			'btn_r2_on'=> '一般門-開',
-			'btn_r2_off' =>'一般門-關',
+        $this->normal_btnMap = [
+			'btn_r1_on' => '鐵捲門-開',
+			'btn_r2_on'=> '鐵捲門-關',
+			'btn_r3_on'=> '一般用電-開',
+			'btn_r3_off' =>'一般用電-關',
+			'btn_r4_on'=> '冷氣用電-開',
+			'btn_r4_off' =>'冷氣用電-關',
+		];
+
+		$this->iron_btnMap = [
+			'btn_r1_on' => '一般門-開',
+			'btn_r2_on'=> '一般門-關',
 			'btn_r3_on'=> '一般用電-開',
 			'btn_r3_off' =>'一般用電-關',
 			'btn_r4_on'=> '冷氣用電-開',
@@ -199,6 +206,7 @@ class PhoneController extends Controller {
 				throw new Exception('找不到該使用者.');
 			}
 			$rt_menu = [];
+			$check_repeat = [];
 			$spcard = \App\models\Spcard::where('customer_id',$customer->id)->first();
 			if($spcard!=null){
 				if(count($spcard->family)!=0){
@@ -208,28 +216,79 @@ class PhoneController extends Controller {
 													->get();
 						if(count($devices)!==0){
 							foreach($devices as $dk => $device){
-								$rt_menu[] = [
-									'device_id' => $device->id,
-									'display_name' => $device->family.'-'.$device->name,
-									'menu' =>[
-										(object)[
-											'id' => 'btn_r1_on',
-											'name' => $this->btnMap['btn_r1_on']
-										],
-										(object)[
-											'id' => 'btn_r1_off',
-											'name' => $this->btnMap['btn_r1_off']
-										],
-										(object)[
-											'id' => 'btn_r2_on',
-											'name' => $this->btnMap['btn_r2_on']
-										],
-										(object)[
-											'id' => 'btn_r2_off',
-											'name' => $this->btnMap['btn_r2_off']
+								if($device->type=='一般'){
+									if(in_array($device->id,$check_repeat)){
+										continue;
+									}
+									$rt_menu[] = [
+										'device_id' => $device->id,
+										'display_name' => $device->family.'-'.$device->name,
+										'menu' =>[
+											(object)[
+												'id' => 'btn_r1_on',
+												'name' => $this->normal_btnMap['btn_r1_on']
+											],
+											(object)[
+												'id' => 'btn_r2_on',
+												'name' => $this->normal_btnMap['btn_r2_on']
+											],
+											(object)[
+												'id' => 'btn_r3_on',
+												'name' => $this->normal_btnMap['btn_r3_on']
+											],
+											(object)[
+												'id' => 'btn_r3_off',
+												'name' => $this->normal_btnMap['btn_r3_off']
+											],
+											(object)[
+												'id' => 'btn_r4_on',
+												'name' => $this->normal_btnMap['btn_r4_on']
+											],
+											(object)[
+												'id' => 'btn_r4_off',
+												'name' => $this->normal_btnMap['btn_r4_off']
+											]
 										]
-									]
-								];
+									];
+									$check_repeat[]=$device->id;
+								}
+								else{
+									if(in_array($device->id,$check_repeat)){
+										continue;
+									}
+									$rt_menu[] = [
+										'device_id' => $device->id,
+										'display_name' => $device->family.'-'.$device->name,
+										'menu' =>[
+											(object)[
+												'id' => 'btn_r1_on',
+												'name' => $this->iron_btnMap['btn_r1_on']
+											],
+											(object)[
+												'id' => 'btn_r2_on',
+												'name' => $this->iron_btnMap['btn_r2_on']
+											],
+											(object)[
+												'id' => 'btn_r3_on',
+												'name' => $this->iron_btnMap['btn_r3_on']
+											],
+											(object)[
+												'id' => 'btn_r3_off',
+												'name' => $this->iron_btnMap['btn_r3_off']
+											],
+											(object)[
+												'id' => 'btn_r4_on',
+												'name' => $this->iron_btnMap['btn_r4_on']
+											],
+											(object)[
+												'id' => 'btn_r4_off',
+												'name' => $this->iron_btnMap['btn_r4_off']
+											]
+										]
+									];
+									$check_repeat[]=$device->id;
+								}
+								
 							}
 						}
 					}
@@ -245,28 +304,88 @@ class PhoneController extends Controller {
 												->get();
 			if(count($bookings)>0){
 				foreach ($bookings as $bk => $booking){
-					$rt_menu[] = [
-						'device_id' => $booking->device->id,
-						'display_name' => $booking->device->family.'-'.$booking->device->name,
-						'menu' =>[
+					$device = $booking->device;
+					if($device->type=='一般'){
+						if(in_array($device->id,$check_repeat)){
+							continue;
+						}
+						$tmp_menu = [
 							(object)[
 								'id' => 'btn_r1_on',
-								'name' => $this->btnMap['btn_r1_on']
-							],
-							(object)[
-								'id' => 'btn_r1_off',
-								'name' => $this->btnMap['btn_r1_off']
+								'name' => $this->normal_btnMap['btn_r1_on']
 							],
 							(object)[
 								'id' => 'btn_r2_on',
-								'name' => $this->btnMap['btn_r2_on']
+								'name' => $this->normal_btnMap['btn_r2_on']
 							],
 							(object)[
-								'id' => 'btn_r2_off',
-								'name' => $this->btnMap['btn_r2_off']
-							]
-						]
-					];
+								'id' => 'btn_r3_on',
+								'name' => $this->normal_btnMap['btn_r3_on']
+							],
+							(object)[
+								'id' => 'btn_r3_off',
+								'name' => $this->normal_btnMap['btn_r3_off']
+							],
+							
+						];
+						if($booking->aircontrol==1){
+							$tmp_menu[]=(object)[
+								'id' => 'btn_r4_on',
+								'name' => $this->normal_btnMap['btn_r4_on']
+							];
+							$tmp_menu[]=(object)[
+								'id' => 'btn_r4_off',
+								'name' => $this->normal_btnMap['btn_r4_off']
+							];
+						}
+
+						$rt_menu[] = [
+							'device_id' => $device->id,
+							'display_name' => $device->family.'-'.$device->name,
+							'menu' => $tmp_menu
+						];
+						$check_repeat[]=$device->id;
+					}
+					else{
+						if(in_array($device->id,$check_repeat)){
+							continue;
+						}
+						$tmp_menu = [
+							(object)[
+								'id' => 'btn_r1_on',
+								'name' => $this->iron_btnMap['btn_r1_on']
+							],
+							(object)[
+								'id' => 'btn_r2_on',
+								'name' => $this->iron_btnMap['btn_r2_on']
+							],
+							(object)[
+								'id' => 'btn_r3_on',
+								'name' => $this->iron_btnMap['btn_r3_on']
+							],
+							(object)[
+								'id' => 'btn_r3_off',
+								'name' => $this->iron_btnMap['btn_r3_off']
+							],
+							
+						];
+						if($booking->aircontrol==1){
+							$tmp_menu[]=(object)[
+								'id' => 'btn_r4_on',
+								'name' => $this->iron_btnMap['btn_r4_on']
+							];
+							$tmp_menu[]=(object)[
+								'id' => 'btn_r4_off',
+								'name' => $this->iron_btnMap['btn_r4_off']
+							];
+						}
+						$rt_menu[] = [
+							'device_id' => $device->id,
+							'display_name' => $device->family.'-'.$device->name,
+							'menu' =>$tmp_menu
+						];
+						$check_repeat[]=$device->id;
+					}
 				}
 			}
 
@@ -281,14 +400,20 @@ class PhoneController extends Controller {
 			if(count($over_bookings)>0){
 				foreach ($over_bookings as $obk => $obooking){
 					if($obooking->device->type=='公用鐵捲門'||$obooking->device->type=='鐵捲門'){
+						if(in_array($device->id,$check_repeat)){
+							continue;
+						}
 						$rt_menu[] = [
 							'device_id' => $booking->device->id,
 							'display_name' => $booking->device->family.'-'.$booking->device->name,
 							'menu' =>[
-								'btn_r1_off'=> $this->btnMap['btn_r1_off'],
-								'btn_r2_off'=> $this->btnMap['btn_r2_off']
+								(object)[
+									'id' => 'btn_r2_on',
+									'name' => $this->iron_btnMap['btn_r2_on']
+								],
 							]
 						];
+						$check_repeat[]=$device->id;
 					}
 				}
 			}
@@ -391,13 +516,13 @@ class PhoneController extends Controller {
 				$setData =[];
 				switch($data['btn_name']){
 					case 'btn_r1_on':
-						$setData[1]="255";
+						$setData[1]="1";
 					break;
 					case 'btn_r1_off':
 						$setData[1]="0";
 					break;
 					case 'btn_r2_on':
-						$setData[2]="255";
+						$setData[2]="1";
 					break;
 					case 'btn_r2_off':
 						$setData[2]="0";
