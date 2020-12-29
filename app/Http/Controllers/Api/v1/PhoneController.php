@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use DateTime;
 use Log;
 use Exception;
-
+use \App\SysLog;
 use DatePeriod;
 use DateInterval;
 class PhoneController extends Controller {
@@ -541,6 +541,12 @@ class PhoneController extends Controller {
 					break;
 				}
 				$tools = new \App\Tools2000;
+				if($device->type=='一般'){
+					$actionName = $this->normal_btnMap[$data['btn_name']];
+				}else{
+					$actionName = $this->iron_btnMap[$data['btn_name']];
+				}
+				SysLog::log('normal',$device->group_id,'phone control',$customer->id,$device->id,0,$actionName);
 				$rt = $tools->setStatus($device->id,$setData);
 				return response()->json(
 					array(

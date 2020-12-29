@@ -131,6 +131,16 @@ class SystemLogController extends Controller
                         $temp_queue[$value->id]['user'] = '';
                     }
                 break;
+                case 'phone control':
+
+                    $rt_data[] = [
+                        $value->created_at->format('Y-m-d H:i:s'),
+                        $value->customer==null?'':$value->customer->name,
+                        $value->device->family.'-'.$value->device->name,
+                        '手機操作',
+                        $value->col3
+                    ];
+                break;
             }
         }
 
