@@ -129,7 +129,8 @@ Route::group(['prefix' => '/api/v1'], function () {
 		Route::post('/phone/btnclick', '\App\Http\Controllers\Api\v1\PhoneController@btnclick');
 
  		Route::get('/remote/dcode', '\App\Http\Controllers\Api\v1\RemoteController@dcode');
- 		Route::get('/remote/operdo', '\App\Http\Controllers\Api\v1\RemoteController@operdo');
+		Route::get('/remote/operdo', '\App\Http\Controllers\Api\v1\RemoteController@operdo');
+		Route::get('/remote/scode', '\App\Http\Controllers\Api\v1\RemoteController@scode');
  	
 });
 
