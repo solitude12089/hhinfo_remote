@@ -137,7 +137,7 @@ class RemoteController extends Controller {
 
 		}
 		else{
-			SysLog::log('normal',$device->group_id,'swipe return',$customer->id,$device->id,$e_swipe_event->id,$mode.'-開門');
+			SysLog::log('normal',$device->group_id,'swipe return',$customer_id,$device->id,$e_swipe_event_id,$mode.'-開門');
 			$gateno ='1';
 			$opentime='4';
 		
@@ -160,8 +160,20 @@ class RemoteController extends Controller {
 
 	public function scode(Request $request){
 		$data = $request->all();
-		$serverip = env('SERVER_IP');
 		Log::debug(__Function__.' get Data :'.json_encode($data));
+		$serverip = env('SERVER_IP');
+		if(!isset($data['controlip'])){
+			return; 
+		}
+		$device = \App\models\Device::where('ip',$data['controlip'])
+									->orWhere('local_ip',$data['controlip'])
+									->first();
+		if($device===null){
+			//return 'Device Miss';
+			return response('serverip='.$serverip, 200)
+				->header('Content-Type', 'text/plain');
+		}
+		$device->touch();
 		return response('serverip='.$serverip, 200)
                   ->header('Content-Type', 'text/plain');
 	}
