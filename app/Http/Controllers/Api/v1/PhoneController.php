@@ -131,7 +131,7 @@ class PhoneController extends Controller {
 											->whereRaw('TIMESTAMPDIFF(MINUTE,updated_at,NOW()) <= 10')
 											->first();
 			if($_tc!=null){
-				$uuid = md5(uniqid(rand()));
+				$uuid =str_pad(rand(1,99999999),8,"0",STR_PAD_LEFT);
 				$customer = \App\models\Customer::firstOrNew(['phone'=>$data['phone']]);
 				$customer->name = $data['name'];
 				$customer->phone_uuid = $uuid;
