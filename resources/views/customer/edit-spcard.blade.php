@@ -61,6 +61,30 @@
                     </div>
 
 
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">特殊權限</label>
+                        <div>
+                            <select  id="authority" name="authority[]" class="form-control chosen" multiple>
+                                @if(in_array('3',$spcard->authority))
+                                    <option value="3" selected>電燈權限</option>
+                                @else
+                                    <option value="3" >電燈權限</option>
+                                @endif
+
+                                @if(in_array('4',$spcard->authority))
+                                    <option value="4" selected>冷氣權限</option>
+                                @else
+                                    <option value="4" >冷氣權限</option>
+                                @endif
+                               
+                                
+
+                            </select>
+
+                        </div>
+                    </div>
+
+
         </form>
     </div>
 

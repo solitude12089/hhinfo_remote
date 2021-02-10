@@ -132,6 +132,8 @@ class PhoneController extends Controller {
 											->first();
 			if($_tc!=null){
 				$uuid =str_pad(rand(1,99999999),8,"0",STR_PAD_LEFT);
+				// $s = str_pad(rand(1,99999999),8,"0",STR_PAD_LEFT);
+				// $uuid = md5(uniqid(rand()));
 				$customer = \App\models\Customer::firstOrNew(['phone'=>$data['phone']]);
 				$customer->name = $data['name'];
 				$customer->phone_uuid = $uuid;
@@ -165,7 +167,7 @@ class PhoneController extends Controller {
     	$content = "歡迎註冊，您的認證碼為『".$vcode."』。(密碼10分鐘有效)";	
     	$mobile = $phone;	
     	$sendTime= "";
-
+		Log::debug(__Function__.' 帳號:'.$userID.' ,密碼:'.$password);
     	$rt = $sms->sendSMS($userID,$password,$subject,$content,$mobile,$sendTime);
 
     	if($rt){
@@ -399,7 +401,7 @@ class PhoneController extends Controller {
 											->get();
 			if(count($over_bookings)>0){
 				foreach ($over_bookings as $obk => $obooking){
-					if($obooking->device->type=='公用鐵捲門'||$obooking->device->type=='鐵捲門'){
+					if($obooking->device->type=='鐵捲門'){
 						if(in_array($device->id,$check_repeat)){
 							continue;
 						}
@@ -468,14 +470,15 @@ class PhoneController extends Controller {
 			$allow = false;
 			$spcard = \App\models\Spcard::where('customer_id',$customer->id)->first();
 			if($spcard!=null){
+				dd($device->family,$spcard->family,$device->group_id,$spcard->group_id);
 				if(in_array($device->family,$spcard->family)&&$device->group_id ==$spcard->group_id){
 					$allow = true;
 				}
 			}
 
-
+			
 			$searchDevice = [];
-			if($device->type=='公用鐵捲門'){
+			if($device->style=='公用'){
 				$searchDevice = \App\models\Device::where('group_id',$device->group_id)
 													->where('family',$device->family)
 													->where('status',1)
@@ -499,7 +502,7 @@ class PhoneController extends Controller {
 			}
 			else{
 				//過時間關鐵捲門
-				if($device->type=='公用鐵捲門'||$device->type=='鐵捲門'){
+				if($device->type=='鐵捲門'){
 					$over_booking = \App\models\BookingHistory::where('date',$toDay)
 													->where('range_id','<=',$nowRanges)
 													->where('status',1)

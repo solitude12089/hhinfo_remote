@@ -59,6 +59,16 @@
 
                         </div>
                     </div>
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">特殊權限</label>
+                        <div>
+                            <select  id="authority" name="authority[]" class="form-control chosen" multiple>
+                                    <option value="3" >電燈權限</option>
+                                    <option value="4" >冷氣權限</option>
+                            </select>
+
+                        </div>
+                    </div>
 
 
         </form>

@@ -13,6 +13,7 @@ class Spcard extends Model
 
     protected $casts = [
         'family' => 'array',
+        'authority' => 'array'
     ];
 
     public function customer()

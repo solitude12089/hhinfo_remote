@@ -41,6 +41,7 @@
                             <th>名稱</th>
                             <th>卡號</th>
                             <th>狀態</th>
+                            <th>最後修改者</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -50,8 +51,13 @@
                             <td>{{$customer->phone}}</td>
                             <td>{{$customer->name}}</td>
                             <td>
-                                @if($customer->card_uuid!=null&&$customer->card_uuid!='')
-                                    {{$customer->card_uuid}}
+                                @if(count($customer->cardList)!=0)
+                                    @foreach($customer->cardList as $key => $card)
+                                        @if($card->card_uuid!="")
+                                        <button class="btn btn-info" >{{$card->card_uuid}}</button>
+                                        @endif
+                                       
+                                    @endforeach
                                 @endif
                             </td>
                             <td>
@@ -59,6 +65,12 @@
                                     <label style="color:green">啟用</label>
                                 @else
                                     <label style="color:red">關閉</label>
+                                @endif
+                            </td>
+
+                            <td>
+                                @if($customer->last_update_user!=null)
+                                    {{$customer->last_update_user->name}}
                                 @endif
                             </td>
                            

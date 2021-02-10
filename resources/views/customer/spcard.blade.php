@@ -41,6 +41,7 @@
                             <th>名稱</th>
                             <th>區域</th>
                             <th>群組</th>
+                            <th>特殊權限</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -54,6 +55,17 @@
                             <td>
                                 @foreach($spcard->family as $key => $value)
                                     <tag class='btn btn-xs btn-success'>{{$value}}</tag>
+                                @endforeach
+                            </td>
+                            <td>
+                                @foreach($spcard->authority as $ak => $av)
+                                    @if($av==3)
+                                        <tag class='btn btn-xs btn-info'>電燈權限</tag>
+                                    @endif
+
+                                    @if($av==4)
+                                        <tag class='btn btn-xs btn-info'>冷氣權限</tag>
+                                    @endif
                                 @endforeach
                             </td>
                             <td>

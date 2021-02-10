@@ -2,7 +2,7 @@
 @section('modal-style')
 <style>
     .modal-body{
-        min-height: 700px;
+        min-height: 750px;
     }
 </style>
 @stop
@@ -84,6 +84,16 @@
 
                    
 
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">用途</label>
+                        <div>
+                            <select  id="type" name="style" class="form-control chosen">
+                                <option value="一般">一般</option>
+                                <option value="公用">公用</option>
+                            </select>
+
+                        </div>
+                    </div>
 
                     <div class="form-group col-lg-12">
                         <label class="control-label">類型</label>
@@ -91,9 +101,6 @@
                             <select  id="type" name="type" class="form-control chosen">
                                 <option value="一般">一般</option>
                                 <option value="鐵捲門">鐵捲門</option>
-                                <option value="公用鐵捲門">公用鐵捲門</option>
-
-
                             </select>
 
                         </div>

@@ -13,7 +13,12 @@
 @section('style')
 @parent
    <link href="/css/datatables.min.css" rel="stylesheet">
-
+   <link href="/css/bootstrap-dialog.min.css" rel="stylesheet">
+   <style>
+        .my_col{
+            text-align: center;
+        }
+   </style>
 @stop
 
 
@@ -21,20 +26,21 @@
 
 
 
-
 <div class="box">
     <div class="box-header with-border">
         <h3 class="box-title">遠端操作</h3>
         <div class="box-tools pull-right">
-        
+            <a class="btn btn-primary btn-xs" href="/remote/sync-status">即時同步</a>
 
         </div>
+     
     </div>
     <!-- /.box-header -->
     <div class="box-body">
         <div class="row">
             <div class="col-lg-12">
-                <table class='table dataTable'>
+                <table class='table dataTable' style="width:100%">
+                @if(0)
                     <thead>
                         <tr>
                             <th>IP</th>
@@ -66,6 +72,7 @@
                         </tr>
                         @endforeach
                     </tbody>
+                @endif
                 </table>
                
             </div>
@@ -94,8 +101,177 @@
 
 @section('script')
     <script src="/js/datatables.min.js"></script>
+    <script src="/js/bootstrap-dialog.min.js"></script>
     <script>
-        $('.dataTable').dataTable();
+       var table = $('.dataTable').DataTable({
+            autoWidth: true,
+            ajax: "/remote/devicelist",
+            columns: [
+                {   title: "IP",
+                    data: "ip" 
+                },
+                {   title: "名稱",
+                    data: "name" 
+                },
+                {   title: "描述",
+                    data: "description" 
+                },
+                {   title: "區域",
+                    data: "group.name" 
+                },
+                
+                {   title: "群組",
+                    data: "family" 
+                },
+                {   title: "用途",
+                    data: "style" 
+                },
+                {   title: "類型",
+                    data: "type" 
+                },
+                {   title: "大門控制",
+                    className: "my_col",
+                    data: function(k,v){
+                       
+                        rtsv = '<button class="btn btn-xs btn-success" onclick="btn_click(this)" msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="1">開</button>\
+                        <button class="btn btn-xs btn-danger" onclick="btn_click(this)" msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="2">關</button>';
+                       
+                        return rtsv;
+                    } 
+                },
+                {   title: "電燈控制",
+                    className: "my_col",
+                    data: function(k,v){
+                        if(k.r3 =="1"){
+                            rtsv = '<button class="btn btn-xs btn-success" onclick="btn_click(this)"  msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="3">開</button>';
+                        }
+                        else{
+                            rtsv = '<button class="btn btn-xs btn-danger" onclick="btn_click(this)"  msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="3">關</button>';
+                        }
+                        return rtsv;
+                    } 
+                },
+                {   
+                    title: "冷氣控制",
+                    className: "my_col",
+                    data: function(k,v){
+                        if(k.r4 =="1"){
+                            rtsv = '<button class="btn btn-xs btn-success" onclick="btn_click(this)"  msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="4">開</button>';
+                        }
+                        else{
+                            rtsv = '<button class="btn btn-xs btn-danger" onclick="btn_click(this)"  msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="4">關</button>';
+                        }
+                        return rtsv;
+                    } 
+                },
+                {   title: "門位狀態",
+                    className: "my_col",
+                    data: function(k,v){
+                        if(k.s1 =="1"){
+                            rtsv = '<button class="btn btn-xs btn-success"  target_id="'+k.id+'" relay="4">開</button>';
+                        }
+                        else{
+                            rtsv = '<button class="btn btn-xs btn-danger" " target_id="'+k.id+'" relay="4">關</button>';
+                        }
+                        return rtsv;
+                    } 
+                }
+              
+              
+            ]
+        });
+
+        setInterval( function () {
+            table.ajax.reload();
+        }, 5000 );
+
+        function btn_click(obj){
+
+            var my = $(obj);
+            var relay = my.attr('relay');
+            var ac = my.text()=='開'?'0':'1';
+            var rname = '';
+            var msg = '';
+            if(relay=="1"){
+                rname = '大門';
+            }
+            if(relay=="2"){
+                rname = '大門';
+            }
+            if(relay=="3"){
+                rname = '電燈';
+            }
+            if(relay=="4"){
+                rname = '冷氣';
+            }
+
+            if(ac=='0'){
+                msg = '是否關閉 '+my.attr('msgtitle')+' '+rname+' ?'; 
+            }
+            else{
+                msg = '是否開啟 '+my.attr('msgtitle')+' '+rname+' ?'; 
+            }
+
+          
+            BootstrapDialog.confirm({
+                title: '確認',
+                message: msg,
+                type: BootstrapDialog.TYPE_WARNING, // <-- Default value is BootstrapDialog.TYPE_PRIMARY
+                closable: true, // <-- Default value is false
+                draggable: true, // <-- Default value is false
+                btnCancelLabel: '取消', // <-- Default value is 'Cancel',
+                btnOKLabel: '確定', // <-- Default value is 'OK',
+                btnOKClass: 'btn-warning', // <-- If you didn't specify it, dialog type will be used,
+                callback: function(result) {
+                    if(result) {
+                        console.log(result);
+                        var device_id = my.attr('target_id');
+                        var relay = my.attr('relay');
+                        var url = '/remote/set-status/'+device_id+'?';
+                        var ac = my.text()=='開'?'0':'1';
+                        if(relay==1||relay==2){
+                            url = url+relay+'=5';
+                        }
+                        else{
+                            if(ac==1){
+                                url = url+relay+'=255';
+                            }
+                            else{
+                                url = url+relay+'=0';
+                            }
+                        }
+
+                        $.ajax({
+                            type: 'Get',
+                            url: url,
+                            success: function(result){
+                                if(result.status==1){
+                                    alert('Successful.');
+                                }
+                                else{
+                                    alert('Fail.');
+                                }
+                                $($obj).attr('disabled', false);
+                            },
+                            error: function(){
+                                alert('Fail.');
+                                $($obj).attr('disabled', false);
+                            }
+                        });
+
+                        console.log(url);
+
+                    }
+                }
+            });
+            // console.log(obj)
+            // var device_id = $(obj).attr('target_id');
+            // var relay = $(obj).attr('relay');
+            // var url = '/remote/set-status/'+device_id+'?';//1=4&2=4&3=4&4=4';
+            // if(relay==1||relay==2){
+            //     url = url+relay+'=5';
+            // }
+        }
 
         function action($obj){
             $($obj).attr('disabled', true);

@@ -27,12 +27,12 @@ class BookingController extends Controller
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::whereIn('group_id', $ugp)
                                             ->where('status',1)
-                                            ->where('type','!=','公用鐵捲門')
+                                            ->where('style','=','一般')
                                             ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::where('status',1)
-                                        ->where('type','!=','公用鐵捲門')
+                                        ->where('style','=','一般')
                                         ->get();
         }
 
@@ -55,7 +55,7 @@ class BookingController extends Controller
                 ->where('date', '<=', $data['endDate']);
         }])
             ->where('group_id', '=', $data['group'])
-            ->where('type', '!=', '公用鐵捲門')
+            ->where('style','=','一般')
             ->where('status', '=', 1);
 
         if(isset($data['device'])&&$data['device']!=''){
@@ -140,6 +140,8 @@ class BookingController extends Controller
         }
         try {
             DB::beginTransaction();
+           
+          
             $success_bh=[];
             foreach ($data['booking'] as $device_id => $arr) {
                 foreach ($arr as $date => $arr2) {
@@ -154,6 +156,20 @@ class BookingController extends Controller
                         $bh->description = $data['note'];
                         $bh->save();
                         $success_bh[]=$bh;
+
+
+                        $syslog =  new \App\models\SystemLog;
+                        $syslog->type = 'booking';
+                        $syslog->function_name = 'booking';
+                        $syslog->user_id = $user->id;
+                        $syslog->col1 = $device_id;
+                        $syslog->col2 = $data['customer'];
+                        $syslog->col3 = $date;
+                        $syslog->col4 = $range_id;
+                        $syslog->col5 = $data['aircontrol'];
+                        $syslog->save();
+
+
                     }
                 }
             }
@@ -184,6 +200,7 @@ class BookingController extends Controller
             return redirect('booking/index')->with('alert-success', '預約成功');
         }
         catch(\Exception $e){
+           
             $errorCode = $e->errorInfo[1];
             $msg = $e->getMessage();
             if($errorCode == 1062){
@@ -205,12 +222,13 @@ class BookingController extends Controller
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::whereIn('group_id', $ugp)
                                             ->where('status',1)
-                                            ->where('type','!=','公用鐵捲門')
+                                            ->where('style','=','一般')
+                                          
                                              ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::where('status',1)
-                                           ->where('type','!=','公用鐵捲門')
+                                           ->where('style','=','一般')
                                            ->get();
         }
         foreach ($_devices as $key => $value) {
@@ -292,12 +310,13 @@ class BookingController extends Controller
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::whereIn('group_id', $ugp)
                                            ->where('status',1)
-                                           ->where('type','!=','公用鐵捲門')
+                                           ->where('style','=','一般')
+                                          
                                            ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::where('status',1)
-                                        ->where('type','!=','公用鐵捲門')
+                                        ->where('style','=','一般')
                                         ->get();
         }
         $devices=[];
@@ -400,14 +419,35 @@ class BookingController extends Controller
 
 
     public function remove(Request $request){
-
-        $data =$request->all();
-        
-       
-        if(!isset($data['remove_id'])||count($data['remove_id'])==0){
-            return redirect('booking/query')->with('alert-danger', '刪除失敗,請點選資料');
+        try{
+            $user = Auth::user();
+            $data =$request->all();
+            
+           
+            if(!isset($data['remove_id'])||count($data['remove_id'])==0){
+                throw new \Exception('刪除失敗,請點選資料');
+            }
+            DB::beginTransaction();
+            $bhs = \App\models\BookingHistory::whereIn('id',$data['remove_id'])->get();
+            foreach ($bhs as $key => $bh){
+                $syslog =  new \App\models\SystemLog;
+                $syslog->type = 'booking';
+                $syslog->function_name = 'remove';
+                $syslog->user_id = $user->id;
+                $syslog->col1 = $bh->device_id;
+                $syslog->col2 = $bh->customer_id;
+                $syslog->col3 = $bh->date;
+                $syslog->col4 = $bh->range_id;
+                $syslog->save();
+                $bh->delete();
+            }
+            DB::commit();
+            return redirect('booking/query')->with('alert-success', '刪除成功');
         }
-        $bh = \App\models\BookingHistory::whereIn('id',$data['remove_id'])->delete();
-        return redirect('booking/query')->with('alert-success', '刪除成功');
+        catch(\Exception $e){
+            DB::rollback();
+            return redirect('booking/query')->with('alert-danger',$e->getMessage());
+        }
+       
     }
 }

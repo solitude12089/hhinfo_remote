@@ -19,6 +19,9 @@
 Route::get('/login', 'Auth\LoginController@getLogin');
 Route::post('/login', 'Auth\LoginController@postLogin');
 Route::get('/logout', 'Auth\LoginController@getLogout');
+Route::get('/privacy',  function(){
+    return View::make('layouts.privacy');
+});
 
 // Route::get('logout', function () {
 //     Auth::logout();
@@ -81,11 +84,13 @@ Route::group(['middleware' => 'auth'], function(){
 	Route::group(['prefix' => 'remote'], function () {
 		Route::get('/test','RemoteController@test');
 		Route::get('/index','RemoteController@index');
+		Route::get('/devicelist','RemoteController@getDeviceList');
 
 		Route::get('/status/{id}','RemoteController@getStatus');
 		Route::get('/set-status/{id}','RemoteController@setStatus');
 		Route::get('/time/{id}','RemoteController@getTime');
 		Route::get('/set-time/{id}','RemoteController@setTime');
+		Route::get('/sync-status','RemoteController@syncStatus');
 		
 	});
 
@@ -107,6 +112,8 @@ Route::group(['middleware' => 'auth'], function(){
 	//SystemLog
 	Route::group(['prefix' => 'systemlog'], function () {
 		Route::get('/index','SystemLogController@index');
+		Route::get('/booking_history','SystemLogController@booking_history');
+		Route::get('/remove_history','SystemLogController@remove_history');
 	});
 
 

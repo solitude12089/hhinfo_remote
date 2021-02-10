@@ -98,7 +98,13 @@
 					<ul class="nav nav-second-level">
 						<li>
 							<a href="{{ url ('/systemlog/index') }}">
-								<i class="fa fa-file-o fa-fw"></i>系統紀錄
+								<i class="fa fa-file-o fa-fw"></i>操作紀錄
+							</a>
+							<a href="{{ url ('/systemlog/booking_history') }}">
+								<i class="fa fa-file-o fa-fw"></i>預約紀錄
+							</a>
+							<a href="{{ url ('/systemlog/remove_history') }}">
+								<i class="fa fa-file-o fa-fw"></i>註銷紀錄
 							</a>
 						</li>
 					</ul>

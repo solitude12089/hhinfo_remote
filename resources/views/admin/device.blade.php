@@ -50,6 +50,7 @@
                             <th>描述</th>
                             <th>群組</th>
                             <th>區域</th>
+                            <th>用途</th>
                             <th>類型</th>
                             <th>狀態</th>
                             <th>最後同步時間</th>
@@ -67,6 +68,7 @@
                             <td>{{$device->description}}</td>
                             <td>{{$device->family}}</td>
                             <td>{{$groups[$device->group_id]}}</td>
+                            <th>{{$device->style}}</th>
                             <th>{{$device->type}}</th>
                             <td>
                                 @if($device->status==1)

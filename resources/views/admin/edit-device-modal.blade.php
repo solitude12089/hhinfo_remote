@@ -92,13 +92,23 @@
 
 
                     <div class="form-group col-lg-12">
+                        <label class="control-label">用途</label>
+                        <div>
+                            <select  id="type" name="style" class="form-control chosen">
+                                <option value="一般" {{$device->style=="一般"?"selected":""}}>一般</option>
+                                <option value="公用" {{$device->style=="公用"?"selected":""}}>公用</option>
+                            </select>
+
+                        </div>
+                    </div>
+
+
+                    <div class="form-group col-lg-12">
                         <label class="control-label">類型</label>
                         <div>
                             <select  id="type" name="type" class="form-control chosen">
                                 <option value="一般" {{$device->type=="一般"?"selected":""}}>一般</option>
                                 <option value="鐵捲門" {{$device->type=="鐵捲門"?"selected":""}}>鐵捲門</option>
-                                <option value="公用鐵捲門" {{$device->type=="公用鐵捲門"?"selected":""}}>公用鐵捲門</option>
-
                             </select>
 
                         </div>

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use Auth;
 use Illuminate\Http\Request;
-
+use DB;
 class SystemLogController extends Controller
 {
     /**
@@ -17,7 +17,8 @@ class SystemLogController extends Controller
 
         $systemlog = \App\models\SystemLog::with('user')
                                         ->with('customer')
-                                        ->with('device');
+                                        ->with('device')
+                                        ->where('type','normal');
                                         
 
         if (Auth::user()->role != 9) {
@@ -172,6 +173,95 @@ class SystemLogController extends Controller
         return view('systemlog.index',['rt_data' => $rt_data]);
 
       
+    }
+
+    public function booking_history(){
+        $user = Auth::user();
+        $more_where = '';
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $users = \App\models\UserGroup::whereIn('group_id', $ugp)
+                                            ->pluck('user_id')->toArray();
+            
+            $more_where = 'and sl.user_id in ('.implode(',', $users).')';
+        }
+
+
+
+        $sql = "SELECT  u.id as u_id,u.name as u_name,c.id as c_id,c.name as c_name,c.phone as c_phone,sl.col4 as range_id,tr.start,tr.end,sl.col3 as `date`,d.id as device_id ,d.family,d.name,sl.col5 as `aircontral`,sl.created_at
+                FROM hhinfo_remote.system_logs as sl
+                join hhinfo_remote.devices as d
+                on sl.col1 = d.id
+                join hhinfo_remote.customers as c
+                on sl.col2 = c.id
+                join hhinfo_remote.time_ranges as tr
+                on sl.col4 = tr.id
+                join hhinfo_remote.users as u
+                on sl.user_id = u.id
+                where sl.type = 'booking' and sl.function_name = 'booking' ".$more_where."
+                order by sl.created_at,sl.col3,sl.col4";
+        $query = DB::select(DB::raw($sql));
+      
+        $rt_data = [];
+        foreach ($query as $key => $v) {
+            $v = (array)$v;
+          
+            $rt_data[] = [
+                $v['date'],
+                $v['start'].' - '.$v['end'],
+                $v['c_phone'].'-'.$v['c_name'],
+                $v['family'].'-'.$v['name'],
+                $v['aircontral']=="1"?'是':'否',
+                $v['u_name'],
+                $v['created_at']
+            ];
+           
+        }
+        return view('systemlog.booking_history',['rt_data' => $rt_data]);
+      
+       
+    }
+
+    public function remove_history(){
+        $user = Auth::user();
+        $more_where = '';
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $users = \App\models\UserGroup::whereIn('group_id', $ugp)
+                                            ->pluck('user_id')->toArray();
+            
+            $more_where = 'and sl.user_id in ('.implode(',', $users).')';
+        }
+        $sql = "SELECT  u.id as u_id,u.name as u_name,c.id as c_id,c.name as c_name,c.phone as c_phone,sl.col4 as range_id,tr.start,tr.end,sl.col3 as `date`,d.id as device_id ,d.family,d.name,sl.created_at
+                FROM hhinfo_remote.system_logs as sl
+                join hhinfo_remote.devices as d
+                on sl.col1 = d.id
+                join hhinfo_remote.customers as c
+                on sl.col2 = c.id
+                join hhinfo_remote.time_ranges as tr
+                on sl.col4 = tr.id
+                join hhinfo_remote.users as u
+                on sl.user_id = u.id
+                where sl.type = 'booking' and sl.function_name = 'remove' ".$more_where."
+                order by sl.created_at,sl.col3,sl.col4";
+       
+        $query = DB::select(DB::raw($sql));
+      
+        $rt_data = [];
+        foreach ($query as $key => $v) {
+            $v = (array)$v;
+          
+            $rt_data[] = [
+                $v['date'],
+                $v['start'].' - '.$v['end'],
+                $v['c_phone'].'-'.$v['c_name'],
+                $v['family'].'-'.$v['name'],
+                $v['u_name'],
+                $v['created_at']
+            ];
+           
+        }
+        return view('systemlog.remove_history',['rt_data' => $rt_data]);
     }
 
     /**

@@ -92,19 +92,41 @@ class RemoteController extends Controller
 
 
         if($role==9){
-             $devices = \App\models\Device::where('status',1)->get();
+             $devices = \App\models\Device::with('group')
+                                        ->where('status',1)
+                                        ->get();
         }
         else{
             $ugp = $user->userGroupList->pluck('group_id')->toArray();
               
-            $devices = \App\models\Device::where('status',1)
+            $devices = \App\models\Device::with('group')
+                                        ->where('status',1)
                                         ->whereIn('group_id',$ugp)
                                         ->get();
         }
-
-    
         return view('remote.index',['devices'=>$devices,'groups'=>$groups]);
-     
+    }
+
+    public function getDeviceList(){
+        $user = Auth::user();
+        $role = $user->role;
+        if($role==9){
+            $devices = \App\models\Device::with('group')
+                                        ->where('status',1)
+                                        ->get();
+        }
+        else{
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+                
+            $devices = \App\models\Device::with('group')
+                                        ->where('status',1)
+                                        ->whereIn('group_id',$ugp)
+                                        ->get();
+        }
+       
+        return response()->json([
+            'data' => $devices
+        ]);
     }
 
 
@@ -140,7 +162,6 @@ class RemoteController extends Controller
     public function setStatus(Request $request,$device_id){
         $setData = $request->all();
        
-
         $tools = new \App\Tools2000;
         $rt = $tools->setStatus($device_id,$setData);
 
@@ -207,5 +228,57 @@ class RemoteController extends Controller
 
     }
 
+    public function syncStatus(){
+        $user = Auth::user();
+        $tools = new \App\Tools2000;
+        $role = $user->role;
+        if($role==9){
+            $devices = \App\models\Device::with('group')
+                                        ->where('status',1)
+                                        ->get();
+        }
+        else{
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+                
+            $devices = \App\models\Device::with('group')
+                                        ->where('status',1)
+                                        ->whereIn('group_id',$ugp)
+                                        ->get();
+        }
+        foreach($devices as $key => $device){
+            $rt = $tools->getStatus($device->id);
+           
+            if($rt['result']==true){
+             
+                $data = $rt['data'];
+                $r1 = isset($data['r1ststus'])?$data['r1ststus']:"";
+                $r2 = isset($data['r2ststus'])?$data['r2ststus']:"";
+                $r3 = isset($data['r3ststus'])?$data['r3ststus']:"";
+                $r4 = isset($data['r4ststus'])?$data['r4ststus']:"";
+                $s1 = isset($data['s1status'])?$data['s1status']:"";
+                $s2 = isset($data['s2status'])?$data['s2status']:"";
+                $s3 = isset($data['s3status'])?$data['s3status']:"";
+                $s4 = isset($data['s4status'])?$data['s4status']:"";
+                $s5 = isset($data['s5status'])?$data['s5status']:"";
+                $s6 = isset($data['s6status'])?$data['s6status']:"";
+          
+                $device->update([
+                    'r1' => $r1,
+                    'r2' => $r2,
+                    'r3'  => $r3,
+                    'r4'  => $r4,
+                    's1'  => $s1,
+                    's2'  => $s2,
+                    's3'  => $s3,
+                    's4'  => $s4,
+                    's5'  => $s5,
+                    's6'  => $s6
+                ]);
+            }
+           
+        }
+        return redirect('/remote/index');
+
+    }
   
 }

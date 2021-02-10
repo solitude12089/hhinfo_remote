@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Auth;
+use DB;
 class CustomerController extends Controller
 {
     /**
@@ -13,8 +14,12 @@ class CustomerController extends Controller
      */
     public function index()
     {
-     
-        $customers = \App\models\Customer::all();
+       
+      
+        $customers = \App\models\Customer::with('cardList')
+                                        ->with('last_update_user')
+                                        ->get();
+                                     
         return view('customer.index',['customers' => $customers]);
         //
     }
@@ -39,43 +44,43 @@ class CustomerController extends Controller
      */
     public function store(Request $request)
     {
-        
-        $data = $request->all();
-   
-        if(!isset($data['phone'])||$data['phone']==''){
-              return redirect('/customer/index')->with('alert-danger', '電話不可為空.');
-        }
-         if(!isset($data['name'])||$data['name']==''){
-              return redirect('/customer/index')->with('alert-danger', '名稱不可為空.');
-        }
-
-     
-     
-
-
-        $customer = \App\models\Customer::where('phone',$data['phone'])->first();
-        if($customer!=null){
-            return redirect('/customer/index')->with('alert-danger', '電話重複,無法建立.');
-        }
-
-       
-       
-
-        $new_customer = new \App\models\Customer;
-        $new_customer->phone = $data['phone'];
-        $new_customer->name = $data['name'];
-   
-        if(isset($data['card_uuid'])&&$data['card_uuid']!=''){
-            $old_card = \App\models\Customer::where('card_uuid',$data['card_uuid'])->first();
-            if($old_card!==null){
-                $old_card->card_uuid = '';
-                $old_card->save();
+        try{
+            $user = Auth::user();
+            $data = $request->all();
+            if(!isset($data['phone'])||$data['phone']==''){
+                throw new \Exception('電話不可為空.');
             }
+            if(!isset($data['name'])||$data['name']==''){
+                throw new \Exception('名稱不可為空.');
+            }
+            $customer = \App\models\Customer::where('phone',$data['phone'])->first();
+            if($customer!=null){
+                throw new \Exception('電話重複,無法建立.');
+            }
+            DB::beginTransaction();
+            $new_customer = new \App\models\Customer;
+            $new_customer->phone = $data['phone'];
+            $new_customer->name = $data['name'];
+            $new_customer->user_id = $user->id;
+            $new_customer->created_id =$user->id;
+            $new_customer->save();
+            
 
-            $new_customer->card_uuid = $data['card_uuid'];
+            if(isset($data['card_uuid'])&&count($data['card_uuid'])!=0){
+                foreach($data['card_uuid'] as $key => $value){
+                    $old_card = \App\models\Card::firstOrNew(['card_uuid'=>$value]);
+                    $old_card->customer_id = $new_customer->id;
+                    $old_card->save();
+                }
+            }
+            DB::commit();
+            return redirect('/customer/index')->with('alert-success', '客戶建立成功.');
         }
-        $new_customer->save();
-        return redirect('/customer/index')->with('alert-success', '客戶建立成功.');
+        catch(\Exception $e){
+            DB::rollback();
+            return redirect('/customer/index')->with('alert-danger', $e->getMessage());
+        }
+        
     }
 
   
@@ -87,7 +92,7 @@ class CustomerController extends Controller
      */
     public function edit($id)
     {
-        $customer = \App\models\Customer::where('id',$id)->first();
+        $customer = \App\models\Customer::with('cardList')->where('id',$id)->first();
         return view('customer.edit',['customer'=>$customer]);
     }
 
@@ -100,8 +105,9 @@ class CustomerController extends Controller
      */
     public function update(Request $request, $id)
     {   
+        $user = Auth::user();
         $data = $request->all();
-
+      
         if(!isset($data['phone'])||$data['phone']==''){
               return redirect('/customer/index')->with('alert-danger', '電話不可為空.');
         }
@@ -124,23 +130,17 @@ class CustomerController extends Controller
         $old_customer->phone = $data['phone'];
         $old_customer->name = $data['name'];
         $old_customer->status = $data['status'];
-   
-        if(isset($data['card_uuid'])&&$data['card_uuid']!=''){
-            $old_customer->card_uuid = $data['card_uuid'];
 
-            $old_card = \App\models\Customer::where('card_uuid',$data['card_uuid'])
-                                        ->where('id','!=',$id)
-                                        ->first();
-            if($old_card!==null){
-                $old_card->card_uuid = '';
+        $old_card_remove = \App\models\Card::where('customer_id',$id)->delete();
+        if(isset($data['card_uuid'])&&count($data['card_uuid'])!=0){
+            foreach($data['card_uuid'] as $key => $value){
+                $old_card = \App\models\Card::firstOrNew(['card_uuid'=>$value]);
+                $old_card->customer_id = $id;
                 $old_card->save();
+              
             }
-
-
         }
-        else{
-            $old_customer->card_uuid = null;
-        }
+        $old_customer->user_id =$user->id;
         $old_customer->save();
         return redirect('/customer/index')->with('alert-success', '客戶修改功.');
     
@@ -149,22 +149,25 @@ class CustomerController extends Controller
 
     public function checkcardid(Request $request){
         $data = $request->all();
-        $check = \App\models\Customer::where('card_uuid',$data['card_id']);
-
-        if($data['id']==null){
-            $check = $check->first();
+        if(isset($data['card_ids']) && count($data['card_ids'])!=0){
+            foreach ($data['card_ids'] as $key => $value){
+                $check = \App\models\Card::with('customer')
+                        ->where('card_uuid',$value);
+                if($data['id']==null){
+                    $check = $check->first();
+                }
+                else{
+                    $check = $check->where('customer_id','!=',$data['id'])
+                                    ->first();
+                }
+                if($check!=null){
+                    return response()->json($check, 200);
+                }
+            }
         }
-        else{
-            $check = $check->where('id','!=',$data['id'])
-                            ->first();
-        }
-
-        if($check==null){
-            return response()->json(1, 200);
-        }
-        else{
-            return response()->json($check, 200);
-        }
+       
+        return response()->json(1, 200);
+        
     }
     
 
@@ -194,6 +197,8 @@ class CustomerController extends Controller
             $spcards = $spcards->whereIn('group_id',$ugp);
         }
         $spcards = $spcards->get();
+
+      
         
         
         return view('customer.spcard',['spcards'=>$spcards]);
@@ -234,7 +239,8 @@ class CustomerController extends Controller
         $spcard = new \App\models\Spcard;
         $spcard->customer_id = $data['customer'];
         $spcard->group_id = $data['group'];
-        $spcard->family= $data['family'];
+        $spcard->family= isset($data['family']) ? $data['family'] :[];
+        $spcard->authority = isset($data['authority']) ? $data['authority']: [];
         $spcard->user_id =$user->id;
         $spcard->save();
         return redirect('/customer/spcard')->with('alert-success', '規則建立成功.');
@@ -276,7 +282,8 @@ class CustomerController extends Controller
         $spcard = \App\models\Spcard::where('id',$spcard_id)->first();
         $spcard->customer_id = $data['customer'];
         $spcard->group_id = $data['group'];
-        $spcard->family= $data['family'];
+        $spcard->family= isset($data['family']) ? $data['family'] :[];
+        $spcard->authority = isset($data['authority']) ? $data['authority']: [];
         $spcard->user_id =$user->id;
         $spcard->save();
         return redirect('/customer/spcard')->with('alert-success', '規則修改成功.');

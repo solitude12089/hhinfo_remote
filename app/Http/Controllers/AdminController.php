@@ -332,7 +332,7 @@ class AdminController extends Controller
         if(isset($data['description'])&&$data['description']!=''){
             $new_device->description = $data['description'];
         }
-
+        $new_device->style = $data['style'];
         $new_device->type = $data['type'];
         $new_device->save();
         return redirect('admin/device')->with('alert-success', '設備建立成功.');
@@ -404,6 +404,7 @@ class AdminController extends Controller
         $olddevice->family = $data['family'];
         $olddevice->status = $data['status'];
         $olddevice->description = $data['description'];
+        $olddevice->style = $data['style'];
         $olddevice->type = $data['type'];
         $olddevice->save();
 

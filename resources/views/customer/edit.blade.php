@@ -2,7 +2,12 @@
 
 @section('modal-style')
 <style>
-   
+   .my_tag{
+        background-color: #043a7c;
+        color: white;
+        margin: 0px 10px;
+        width:'400px';
+   }
 </style>
 @stop
 
@@ -42,7 +47,23 @@
                     <div class="form-group col-lg-12">
                         <label class="control-label">悠遊卡號</label>
                         <div>
-                            <input id="card_uuid" name="card_uuid"  class="form-control"  value="{{$customer->card_uuid}}">
+                            <div id="card_gulp">
+                                @if(count($customer->cardList)!=0)
+                                    @foreach($customer->cardList as $key => $card)
+                                        @if($card->card_uuid!="")
+                                        <div  class="btn btn-info"> {{$card->card_uuid}}
+                                            <input type="button" class="btn btn-xs btn-danger" onclick="remove(this)" value="x"/>
+                                            <input type="hidden" name="card_uuid[]" value="{{$card->card_uuid}}">
+                                        </div>
+                                        @endif
+                                        
+                                    @endforeach
+                                @endif
+                            </div>
+                            <div>
+                                <input id="card_uuid_input"  class="form-control" style="width: 90%;display: inline;"/>
+                                <input class="btn btn-success" type="button" onclick="insert(this)" value="新增"/>
+                            </div>
 
                         </div>
                     </div>
@@ -75,10 +96,20 @@
    
     var c_id = <?php echo $customer->id; ?>;
     $('#btnSave').click(function(){
+        if($('#card_uuid_input').val().length!=0){
+            insert($('#card_uuid_input'));
+        }
+
+
         console.log('ZZZ');
         var phone = $('#phone').val();
         var name = $('#name').val();
-        var card_uuid = $('#card_uuid').val();
+        var card_uuids = [];
+        $.each($('[name ="card_uuid[]"]'),function(k,v){
+            card_uuids.push($(v).val());
+        });
+
+
         if(phone==''){
             alert('電話不可為空值.');
             return;
@@ -93,7 +124,7 @@
             return;
         }
 
-        if(card_uuid!=''){
+        if(card_uuids.length!=0){
             var url = '/customer/checkcardid';
 
             $.ajax({
@@ -101,14 +132,14 @@
                     url: url,
                     data: {
                         'id':c_id,
-                        'card_id':card_uuid,
+                        'card_ids':card_uuids,
                     },
                     success: function(result){
                         if(result==1){
                             $('#postform').submit();
                         }
                         else{
-                            $msg = '<div>該卡號已被 '+result.phone+' - '+result.name+' 註冊</div>\
+                            $msg = '<div>該卡號 : '+result.card_uuid+' 已被 '+result.customer.phone+' - '+result.customer.name+' 註冊</div>\
                             <div>是否強制綁定卡號至該用戶???</div>';
                             BootstrapDialog.confirm({
                                 title: '警告',
@@ -136,6 +167,23 @@
 
     });
 
+    function remove(obj){
+        $(obj).parent().remove();
+    }
+
+    function insert(obj){
+        var card_uuid = $('#card_uuid_input').val();
+        if(card_uuid.length!=0){
+            var html = '<div class="btn btn-info">'+card_uuid+'\
+                        <input type="button" class="btn btn-xs btn-danger" onclick="remove(this)" value="x"/>\
+                        <input type="hidden" name="card_uuid[]" value="'+card_uuid+'">\
+                    </div>';
+            $('#card_gulp').append(html);
+            $('#card_uuid_input').val("");
+        }
+      
+    }
+  
    
 
 

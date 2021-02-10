@@ -19,4 +19,8 @@ class Device extends Model
     {
         return $this->hasMany('\App\models\BookingHistory', 'device_id', 'id');
     }
+    
+    public function group(){
+        return $this->hasOne('\App\models\Group','id','group_id');
+    }
 }
