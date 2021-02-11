@@ -167,11 +167,14 @@
                 {   title: "門位狀態",
                     className: "my_col",
                     data: function(k,v){
-                        if(k.s1 =="1"){
-                            rtsv = '<button class="btn btn-xs btn-success"  target_id="'+k.id+'" relay="4">開</button>';
-                        }
-                        else{
-                            rtsv = '<button class="btn btn-xs btn-danger" " target_id="'+k.id+'" relay="4">關</button>';
+                        rtsv = '';
+                        if(k.type=='鐵捲門'){
+                            if(k.s1 =="0"){
+                                rtsv = '<button class="btn btn-xs btn-success"  target_id="'+k.id+'" relay="4">開</button>';
+                            }
+                            else{
+                                rtsv = '<button class="btn btn-xs btn-danger" " target_id="'+k.id+'" relay="4">關</button>';
+                            }
                         }
                         return rtsv;
                     } 
