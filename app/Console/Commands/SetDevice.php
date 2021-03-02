@@ -99,7 +99,7 @@ class SetDevice extends Command
 
 
             }
-           
+        }
 	
 	}
 }
