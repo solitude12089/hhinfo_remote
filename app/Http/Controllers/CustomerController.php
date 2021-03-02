@@ -148,25 +148,62 @@ class CustomerController extends Controller
 
 
     public function checkcardid(Request $request){
-        $data = $request->all();
-        if(isset($data['card_ids']) && count($data['card_ids'])!=0){
-            foreach ($data['card_ids'] as $key => $value){
-                $check = \App\models\Card::with('customer')
-                        ->where('card_uuid',$value);
-                if($data['id']==null){
-                    $check = $check->first();
+
+        try{
+            $data = $request->all();
+        
+            if(!isset($data['phone'])||$data['phone']==''){
+                throw new \Exception('電話不可為空');
+            }
+            $old_customer = \App\models\Customer::where('phone',$data['phone'])
+                                            ->where('status',1);
+            if($data['id']!=null){
+                $old_customer = $old_customer->where('id','!=',$data['id']);
+              
+            }
+            $old_customer=$old_customer->count();
+            
+            if($old_customer!=0){
+                throw new \Exception('電話重複,無法建立');
+            }
+            if(isset($data['card_ids']) && count($data['card_ids'])!=0){
+                $check_arr = [];
+                foreach ($data['card_ids'] as $key => $value){
+                    $check = \App\models\Card::with('customer')
+                            ->where('card_uuid',$value);
+                    if($data['id']==null){
+                        $check = $check->first();
+                    }
+                    else{
+                        $check = $check->where('customer_id','!=',$data['id'])
+                                        ->first();
+                    }
+                    if($check!=null){
+                        $check_arr[]=$check;
+                    }
                 }
-                else{
-                    $check = $check->where('customer_id','!=',$data['id'])
-                                    ->first();
-                }
-                if($check!=null){
-                    return response()->json($check, 200);
+                if(count($check_arr)!=0){
+                    return response()->json([
+                        'result' => 2,
+                        'checks' => $check_arr
+                    ],200);
                 }
             }
+
+
+            return response()->json([
+                'result' => 1
+            ],200);
+           
+           
+        }
+        catch(\Exception $e){
+            return response()->json([
+                'result' => 0,
+                'msg' => $e->getMessage()
+            ],200);
         }
        
-        return response()->json(1, 200);
         
     }
     

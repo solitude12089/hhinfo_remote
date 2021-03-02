@@ -60,7 +60,6 @@ class RemoteController extends Controller
             if($rt['result']==false){
                 $msg = $rt['msg'];
                 $msg2 = DB::connection()->getPdo()->quote(utf8_encode($rt['msg']));
-                dd($msg,$msg2);
                 $error = new \App\models\ScheduleError;
                 $error->ip = $rt['ip'];
                 $error->path = $rt['path'];
@@ -107,6 +106,32 @@ class RemoteController extends Controller
         return view('remote.index',['devices'=>$devices,'groups'=>$groups]);
     }
 
+    public function getChangeMode(Request $request,$device_id){
+        try{
+            $data = $request->all();
+            $device = \App\models\Device::where('id',$device_id)->first();
+            if($device===null){
+                throw new \Exception('找不到該裝置.');
+            }
+            if(!isset($data['mode'])||$data['mode']==''){
+                throw new \Exception('請輸入模式.');
+            }
+            $device->mode = $data['mode'];
+            $device->save();
+            return response()->json(
+                array(
+                    'status' =>1
+                ), 200);
+        }
+        catch(\Exception $e){
+            return response()->json(
+                array(
+                    'status' =>0, 
+                    'msg' => $e->getMessage()
+                ), 200);
+        }
+     
+    }
     public function getDeviceList(){
         $user = Auth::user();
         $role = $user->role;

@@ -91,6 +91,10 @@ Route::group(['middleware' => 'auth'], function(){
 		Route::get('/time/{id}','RemoteController@getTime');
 		Route::get('/set-time/{id}','RemoteController@setTime');
 		Route::get('/sync-status','RemoteController@syncStatus');
+
+		Route::get('/change-mode/{id}','RemoteController@getChangeMode');
+
+
 		
 	});
 
@@ -107,6 +111,7 @@ Route::group(['middleware' => 'auth'], function(){
 		Route::post('/calendar','BookingController@postCalendar');
 
 		Route::post('/remove','BookingController@remove');
+		Route::get('/quick_booking','BookingController@quick_booking');
 	});
 
 	//SystemLog
@@ -114,6 +119,7 @@ Route::group(['middleware' => 'auth'], function(){
 		Route::get('/index','SystemLogController@index');
 		Route::get('/booking_history','SystemLogController@booking_history');
 		Route::get('/remove_history','SystemLogController@remove_history');
+		Route::get('/air_log','SystemLogController@s2_change');
 	});
 
 

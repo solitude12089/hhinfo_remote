@@ -7,15 +7,33 @@
 	<table  class="table table-bordered">
 			<thead>
 				 <tr>
-				 	@foreach($timeRanges as $tk =>$time)
-                    	<th>{{$time}}</th>
+					@foreach($timeRanges as $tk =>$time)
+						@if($tk==0)
+							@if(substr($time['value'],-2,2)==30)
+								<th class="my_th" colspan=1>{{substr($time['value'],0,2)}}點30</th>
+							@else
+								<th class="my_th" colspan=2>{{substr($time['value'],0,2)}}點</th>
+							@endif
+						@else
+							@if(substr($timeRanges[0]['value'],-2,2)==30)
+								@if($tk%2==1)
+									<th class="my_th" colspan=2>{{substr($time['value'],0,2)}}點</th>
+									
+								@endif
+							@else
+								@if($tk%2==0)
+									<th class="my_th" colspan=2>{{substr($time['value'],0,2)}}點</th>
+									
+								@endif
+							@endif
+						@endif
                     @endforeach
                 </tr>
 			</thead>
 			<tbody>
 				<tr>
 					@foreach($timeRanges as $tk =>$time)
-                    	<th><input type="checkbox" value="{{$device->id}}-{{$tk}}" onclick="selectAll(this)"></th>
+                    	<th><input type="checkbox" value="{{$device->id}}-{{$time['value']}}" onclick="selectAll(this)"></th>
                     @endforeach
 				</tr>
 			</tbody>
@@ -27,20 +45,67 @@
 			<thead>
 				 <tr>
 				 	@foreach($timeRanges as $tk =>$time)
-                    	<th>{{$time}}</th>
+						@if($tk==0)
+							@if(substr($time['value'],-2,2)==30)
+								<th class="my_th" colspan=1>{{$time['start_key']}}</th>
+							@else
+								<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
+							@endif
+						@else
+							@if(isset($timeRanges[$tk+1]))
+								@if(substr($timeRanges[0]['value'],-2,2)==30)
+									@if($tk%2==1)
+										<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
+									@endif
+								@else
+									@if($tk%2==0)
+										<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
+									@endif
+								@endif
+							@else
+								@if(substr($time['value'],-2,2)==30)
+									@if(substr($timeRanges[0]['value'],-2,2)==30)
+										@if($tk%2==1)
+											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+										@endif
+									@else
+										@if($tk%2==0)
+											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+										@endif
+									@endif
+								@else
+									@if(substr($timeRanges[0]['value'],-2,2)==30)
+										@if($tk%2==1)
+											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+										@endif
+									@else
+										@if($tk%2==0)
+											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+										@endif
+									@endif
+								@endif
+
+							@endif
+							
+							<!-- if($tk) -->
+							
+
+						@endif
                     @endforeach
                 </tr>
 			</thead>
 			<tbody>
 				<tr class="pick-row">
 					@foreach($timeRanges as $tk =>$time)
-						@if(isset($device->BookingHistory_Mark[$date][$tk]))
-						<td class="full">{{$device->BookingHistory_Mark[$date][$tk]->customer->phone.'-'.$device->BookingHistory_Mark[$date][$tk]->customer->name}}</td>
+						@if(isset($device->BookingHistory_Mark[$date][$time['start_key']]))
+						<td class="full">
+							
+						</td>
 						@else
-							@if($date<=$now['day']&&$tk<$now['range'])
+							@if($date<=$now['day']&&$time['end_key']<$now['range'])
 								<td class="expired"></td>
 							@else
-								<td class="idle idle-{{$device->id}}-{{$tk}}" date="{{$date}}" range="{{$tk}}" place="{{$device->id}}"></td>
+								<td class="idle idle-{{$device->id}}-{{$time['value']}}" date="{{$date}}" start="{{$time['start_key']}}"  end="{{$time['end_key']}}"  place="{{$device->id}}"></td>
 							@endif
 						@endif
                     	

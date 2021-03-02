@@ -29,7 +29,7 @@
                     <div class="form-group col-lg-12">
                         <label class="control-label">電話 (ex:0912345678 or 0227861020)</label>
                         <div>
-                            <input id="phone" name="phone"  class="form-control" >
+                            <input id="phone" name="phone" oninput="value=value.replace(/[^\d]/g,'')" class="form-control" >
 
                         </div>
                     </div>
@@ -49,7 +49,7 @@
                                
                             </div>
                             <div>
-                                <input id="card_uuid_input"  class="form-control" style="width: 90%;display: inline;"/>
+                                <input id="card_uuid_input"  class="form-control"  oninput="value=value.replace(/[^\d]/g,'')" style="width: 90%;display: inline;"/>
                                 <input class="btn btn-success" type="button" onclick="insert(this)" value="新增"/>
                             </div>
                         </div>
@@ -90,49 +90,51 @@
             alert('電話格式錯誤.');
             return;
         }
-
-
-        if(card_uuids.length!=0){
-            var url = '/customer/checkcardid';
-
-            $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: {
-                        'id':null,
-                        'card_ids':card_uuids,
-                      
-                    },
-                    success: function(result){
-                        if(result==1){
-                            $('#postform').submit();
-                        }
-                        else{
-                            $msg = '<div>該卡號 : '+result.card_uuid+' 已被 '+result.customer.phone+' - '+result.customer.name+' 註冊</div>\
-                            <div>是否強制綁定卡號至該用戶???</div>';
-                            BootstrapDialog.confirm({
-                                title: '警告',
-                                message: $msg,
-                                type: BootstrapDialog.TYPE_WARNING, // <-- Default value is BootstrapDialog.TYPE_PRIMARY
-                                closable: true, // <-- Default value is false
-                                draggable: true, // <-- Default value is false
-                                btnCancelLabel: '取消', // <-- Default value is 'Cancel',
-                                btnOKLabel: '確定', // <-- Default value is 'OK',
-                                btnOKClass: 'btn-warning', // <-- If you didn't specify it, dialog type will be used,
-                                callback: function(result) {
-                                    if(result) {
-                                        $('#postform').submit();
-                                    }
-                                }
-                            });
-                          
-                        }
+        var url = '/customer/checkcardid';
+        $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    'id':null,
+                    'card_ids':card_uuids,
+                    'phone':phone
+                    
+                },
+                success: function(result){
+                    if(result.result==1){
+                        $('#postform').submit();
                     }
-            });
-        }
-        else{
-            $('#postform').submit();
-        }
+                    if(result.result==2){
+                        $msg = '';
+                        $.each(result.checks,function(k,v){
+                            $msg += '<div>該卡號 : '+v.card_uuid+' 已被 '+v.customer.phone+' - '+v.customer.name+' 註冊</div>'
+                        });
+                        $msg += '<div>是否強制綁定卡號至該用戶???</div>';
+                        BootstrapDialog.confirm({
+                            title: '警告',
+                            message: $msg,
+                            type: BootstrapDialog.TYPE_WARNING, // <-- Default value is BootstrapDialog.TYPE_PRIMARY
+                            closable: true, // <-- Default value is false
+                            draggable: true, // <-- Default value is false
+                            btnCancelLabel: '取消', // <-- Default value is 'Cancel',
+                            btnOKLabel: '確定', // <-- Default value is 'OK',
+                            btnOKClass: 'btn-warning', // <-- If you didn't specify it, dialog type will be used,
+                            callback: function(result) {
+                                if(result) {
+                                    $('#postform').submit();
+                                }
+                            }
+                        });
+                    }
+                    if(result.result==0){
+                        alert(result.msg);
+                        return;
+                    }
+                }
+        });
+    
+        //$('#postform').submit();
+        
        
     });
 
@@ -143,6 +145,10 @@
     function insert(obj){
         var card_uuid = $('#card_uuid_input').val();
         if(card_uuid.length!=0){
+            if(card_uuid.length!=10 &&  card_uuid.length!=14){
+                alert('卡號長度只允許 10、14 碼.');
+                return;
+            }
             var html = '<div class="btn btn-info">'+card_uuid+'\
                         <input type="button" class="btn btn-xs btn-danger" onclick="remove(this)" value="x"/>\
                         <input type="hidden" name="card_uuid[]" value="'+card_uuid+'">\

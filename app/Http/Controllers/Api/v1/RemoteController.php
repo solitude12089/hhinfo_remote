@@ -159,7 +159,7 @@ class RemoteController extends Controller {
 
 	public function opendoor($device,$senser,$customer_id,$e_swipe_event_id,$mode,$spcard = null){
 	
-		$serverip = env('SERVER_IP');
+		$serverip = '114.35.246.115';
 		if($device->type=='鐵捲門')
 		{
 			$opentime='1';
@@ -214,6 +214,11 @@ class RemoteController extends Controller {
 			//return 'Device Miss';
 			return response('serverip='.$serverip, 200)
 				->header('Content-Type', 'text/plain');
+		}
+		if(isset($data['s2status'])&&$device->s2!=$data['s2status']){
+			$toDay = date('Y-m-d');
+			$nowRanges = date('H:i');
+			SysLog::log('normal',$device->group_id,'s2 change',0,$device->id,$data['s2status'],$toDay,$nowRanges);
 		}
 		$r1 = isset($data['r1status'])?$data['r1status']:"";
 		$r2 = isset($data['r2status'])?$data['r2status']:"";

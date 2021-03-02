@@ -470,7 +470,6 @@ class PhoneController extends Controller {
 			$allow = false;
 			$spcard = \App\models\Spcard::where('customer_id',$customer->id)->first();
 			if($spcard!=null){
-				dd($device->family,$spcard->family,$device->group_id,$spcard->group_id);
 				if(in_array($device->family,$spcard->family)&&$device->group_id ==$spcard->group_id){
 					$allow = true;
 				}

@@ -326,12 +326,14 @@ class AdminController extends Controller
         $new_device->local_ip = $data['local_ip'];
         $new_device->ip_mode = $data['ip_mode'];
         $new_device->name = $data['name'];
+     
         $new_device->group_id = $data['group'];
         $new_device->family = $data['family'];
 
         if(isset($data['description'])&&$data['description']!=''){
             $new_device->description = $data['description'];
         }
+        $new_device->mode = $data['mode'];
         $new_device->style = $data['style'];
         $new_device->type = $data['type'];
         $new_device->save();
@@ -404,6 +406,7 @@ class AdminController extends Controller
         $olddevice->family = $data['family'];
         $olddevice->status = $data['status'];
         $olddevice->description = $data['description'];
+        $olddevice->mode = $data['mode'];
         $olddevice->style = $data['style'];
         $olddevice->type = $data['type'];
         $olddevice->save();

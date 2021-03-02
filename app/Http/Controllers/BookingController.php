@@ -15,13 +15,17 @@ class BookingController extends Controller
     {
 
         $user = Auth::user();
-        $_timeRanges = \App\models\TimeRange::all();
-        $timeRanges = [];
-        foreach ($_timeRanges as $key => $value){
-            $timeRanges[$value->id] = $value;
-        }
         $devices=[];
         $deviceMap = [];
+        $timeRanges = [];
+        $_timeRanges = $this->MyTimeRange('00:00','23:30',true);
+        foreach ($_timeRanges as $key => $value){
+            
+            $timeRanges[$value['start_key']] = [
+                'start' => $value['start_key'],
+                'end' => $value['end_key'],
+            ];
+        }
         if (Auth::user()->role != 9) {
             $ugp = $user->userGroupList->pluck('group_id')->toArray();
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
@@ -37,22 +41,69 @@ class BookingController extends Controller
         }
 
         foreach ($_devices as $key => $value) {
-            $devices[$value->group_id][] = $value;
+            $devices[$value->group_id][$value->family][] = $value;
+            $deviceMap[$value->id]=$value;
+        }
+
+
+
+        $customers = \App\models\Customer::where('status', 1)->get();
+
+        return view('booking.index', ['devices' => $devices, 'groups' => $groups,'timeRanges' => $timeRanges, 'customers' => $customers,'deviceMap'=>$deviceMap]);
+    }
+
+
+    public function quick_booking()
+    {
+
+        $user = Auth::user();
+        $devices=[];
+        $deviceMap = [];
+        $timeRanges = [];
+        $_timeRanges = $this->MyTimeRange('00:00','23:30',true);
+        foreach ($_timeRanges as $key => $value){
+            
+            $timeRanges[$value['start_key']] = [
+                'start' => $value['start_key'],
+                'end' => $value['end_key'],
+            ];
+        }
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)
+                                            ->where('status',1)
+                                            ->where('style','=','一般')
+                                            ->get();
+        } else {
+            $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::where('status',1)
+                                        ->where('style','=','一般')
+                                        ->get();
+        }
+
+        foreach ($_devices as $key => $value) {
+            $devices[$value->group_id][$value->family][] = $value;
             $deviceMap[$value->id]=$value;
         }
 
         $customers = \App\models\Customer::where('status', 1)->get();
 
-        return view('booking.index', ['devices' => $devices, 'groups' => $groups, 'timeRanges' => $timeRanges, 'customers' => $customers,'deviceMap'=>$deviceMap]);
-    }
+        //dd($devices); 
 
+        return view('booking.quick_booking', ['devices' => $devices, 'groups' => $groups,'timeRanges' => $timeRanges, 'customers' => $customers,'deviceMap'=>$deviceMap]);
+    }
     public function postSearch(Request $request)
     {
+        
         $data = $request->all();
-       
+      
+        $half = true;
         $devices = \App\models\Device::with(['BookingHistory' => function ($q) use ($data) {
             $q->where('date', '>=', $data['startDate'])
-                ->where('date', '<=', $data['endDate']);
+                ->where('date', '<=', $data['endDate'])
+                ->where('start_at','>=',$data['sp_time_s'].':00')
+                ->where('end_at','<=',$data['sp_time_e'].':00');
         }])
             ->where('group_id', '=', $data['group'])
             ->where('style','=','一般')
@@ -73,7 +124,7 @@ class BookingController extends Controller
         $ranges = $this->MyDateRange($data['startDate'], $data['endDate']);
         $now = [
             'day' => date('Y-m-d'),
-            'range' => date('H'),
+            'range' => date('H:i'),
         ];
         $dayMap = [];
         foreach ($ranges as $key => $value) {
@@ -114,29 +165,50 @@ class BookingController extends Controller
             }
         }
 
-        $timeRanges = \App\models\TimeRange::all()->pluck('description', 'id')->toArray();
+        $timeRanges = $this->MyTimeRange($data['sp_time_s'], $data['sp_time_e'],$half);
+       
+   
 
-        $ss = view('booking.searchTable', ['devices' => $devices, 'ranges' => $ranges, 'timeRanges' => $timeRanges,'dayMap'=>$dayMap,'now' => $now]);
+
+        //{{$device->BookingHistory_Mark[$date][$time['start_key']]->customer->phone.'-'.$device->BookingHistory_Mark[$date][$time['start_key']]->customer->name}}
+        $ss = view('booking.searchTable', ['devices' => $devices, 'ranges' => $ranges, 'timeRanges' => $timeRanges,'half' => $half,'dayMap'=>$dayMap,'now' => $now]);
 
         return $ss;
     }
 
  
+    public function checkDuplicate($device_id,$date,$timearr){
+        $o_BookingHistory = \App\models\BookingHistory::with('device')
+                                                ->where('device_id',$device_id)
+                                                ->where('date',$date)
+                                                ->whereIn('range_id',$timearr)
+                                                ->get();
+
+       
+                                  
+        if(count($o_BookingHistory)==0){
+            return null;
+        }
+        else{
+            return $o_BookingHistory;
+        }
+    }
 
     public function postBooking(Request $request)
     {
         $data = $request->all();
+     
         $user = Auth::user();
 
         if (!isset($data['customer']) || $data['customer'] == '') {
-            return redirect('booking/index')->with('alert-danger', '預約失敗,預約者不可為空值.');
+            return  redirect()->back()->with('alert-danger', '預約失敗,預約者不可為空值.');
         }
 
         if (!isset($data['aircontrol']) || $data['aircontrol'] == '') {
-            return redirect('booking/index')->with('alert-danger', '預約失敗,是否租用冷氣不可為空值.');
+            return  redirect()->back()->with('alert-danger', '預約失敗,是否租用冷氣不可為空值.');
         }
         if (!isset($data['booking']) || count($data['booking']) == 0) {
-            return redirect('booking/index')->with('alert-danger', '預約失敗,預約時段不可為空值.');
+            return  redirect()->back()->with('alert-danger', '預約失敗,預約時段不可為空值.');
         }
         try {
             DB::beginTransaction();
@@ -145,12 +217,27 @@ class BookingController extends Controller
             $success_bh=[];
             foreach ($data['booking'] as $device_id => $arr) {
                 foreach ($arr as $date => $arr2) {
+                    $checkDuplicate = $this->checkDuplicate($device_id,$date,$arr2);
+                    if($checkDuplicate!=null){
+                        $msg = '預約時段重複.</br>';
+                        foreach ($checkDuplicate as $kk =>$v){
+                            $msg = $msg.$v->device->family.'-'.$v->device->name.' , '.$v->date.' '.$v->start_at.'~'.$v->end_at.'</br>';
+                        }
+                        throw new \Exception($msg);
+                    }
                     foreach ($arr2 as $key => $range_id) {
+                        $time = new DateTime($range_id);
+                        $time->add(new DateInterval('PT30M'));
+                        $endtime = $time->format('H:i');
+
+
                         $bh = new \App\models\BookingHistory;
                         $bh->device_id = $device_id;
                         $bh->date = $date;
                         $bh->customer_id = $data['customer'];
                         $bh->range_id = $range_id;
+                        $bh->start_at = $range_id;
+                        $bh->end_at = $endtime;
                         $bh->aircontrol = $data['aircontrol'];
                         $bh->user_id = $user->id;
                         $bh->description = $data['note'];
@@ -176,11 +263,11 @@ class BookingController extends Controller
             DB::commit();
 
 
-            $nowRanges = date('H');
+            $nowRanges = date('H:i');
             $toDay = date('Y-m-d');
             $tools = new \App\Tools2000;
             foreach($success_bh as $key => $value){
-                if($value->range_id==$nowRanges&&$value->date==$toDay){
+                if($value->start_at<=$nowRanges&&$value->end_at>$nowRanges&&$value->date==$toDay){
                     if($value->aircontrol==1){
                         $setData = [
                             "3"=>"255",
@@ -200,13 +287,8 @@ class BookingController extends Controller
             return redirect('booking/index')->with('alert-success', '預約成功');
         }
         catch(\Exception $e){
-           
-            $errorCode = $e->errorInfo[1];
             $msg = $e->getMessage();
-            if($errorCode == 1062){
-                $msg='預約時段重複,請重新整理後再試.';
-            }
-            return redirect('booking/index')->with('alert-danger', '預約失敗,'.$msg);
+            return  redirect()->back()->with('alert-danger', '預約失敗,'.$msg);
         }
       
 
@@ -265,7 +347,7 @@ class BookingController extends Controller
                         c.id as user_id,
                         c.name as user,
                         c.phone,bh.range_id,
-                        tr.description as tr_description,
+                        CONCAT(bh.start_at," ~ ",bh.end_at) as tr_description,
                         bh.date,
                         bh.description,
                         d.id as device_id,
@@ -275,9 +357,7 @@ class BookingController extends Controller
                 join hhinfo_remote.devices as d
                 on bh.device_id = d.id
                 join hhinfo_remote.customers as c
-                on bh.customer_id = c.id
-                join hhinfo_remote.time_ranges as tr
-                on bh.range_id = tr.id';
+                on bh.customer_id = c.id';
         $sql = $sql.$whereRaw.' order by bh.date,c.id,bh.range_id';
         $query = DB::select(DB::raw($sql));
        // dd($sql,$query);
@@ -332,14 +412,12 @@ class BookingController extends Controller
     {
         $data = $request->all();
 
-        $sql = 'SELECT  c.id as user_id,c.name as user,c.phone,bh.range_id,tr.start,tr.end,bh.date,bh.description,d.id as device_id ,d.family,d.name,bh.aircontrol
+        $sql = 'SELECT  c.id as user_id,c.name as user,c.phone,bh.range_id,bh.start_at,bh.end_at,bh.date,bh.description,d.id as device_id ,d.family,d.name,bh.aircontrol
                 FROM hhinfo_remote.booking_histories as bh
                 join hhinfo_remote.devices as d
                 on bh.device_id = d.id
                 join hhinfo_remote.customers as c
                 on bh.customer_id = c.id
-                join hhinfo_remote.time_ranges as tr
-                on bh.range_id = tr.id
                 where d.group_id = ' . $data['group'] . ' and d.id = \'' . $data['device'] . '\'  and  EXTRACT(YEAR_MONTH from bh.date) = \'' . str_replace('-', '', $data['date']) . '\'
                 order by bh.date,c.id,bh.range_id';
        
@@ -355,7 +433,7 @@ class BookingController extends Controller
             foreach ($v as $k_user => $vv) {
                 $event = [];
                 foreach ($vv as $k => $vvv) {
-                    if (isset($vv[$k + 1]) && $vv[$k + 1]->range_id == $vvv->range_id + 1) {
+                    if (isset($vv[$k + 1]) && $vv[$k + 1]->start_at == $vvv->end_at) {
                         if($event==[]){
                             if($vvv->aircontrol==1){
                                 $event['title'] = '(冷)'.$vvv->user;
@@ -365,11 +443,11 @@ class BookingController extends Controller
                                 $event['title'] = $vvv->user;
                             }
                             $event['note'] = $vvv->description;
-                            $event['start'] = $k_date . ' ' . $vvv->start;
+                            $event['start'] = $k_date . ' ' . $vvv->start_at;
                         }
                     } else {
                         if ($event != []) {
-                            $event['end'] = $k_date . ' ' . $vvv->end;
+                            $event['end'] = $k_date . ' ' . $vvv->end_at;
                             $eventList[] = $event;
                             $event = [];
                         } else {
@@ -382,8 +460,8 @@ class BookingController extends Controller
 
                             }
                             $event['note'] = $vvv->description;
-                            $event['start'] = $k_date . ' ' . $vvv->start;
-                            $event['end'] = $k_date . ' ' . $vvv->end;
+                            $event['start'] = $k_date . ' ' . $vvv->start_at;
+                            $event['end'] = $k_date . ' ' . $vvv->end_at;
                             $eventList[] = $event;
                             $event = [];
                         }
@@ -415,6 +493,55 @@ class BookingController extends Controller
         }
         $array[] = $end;
         return $array;
+    }
+
+    public function MyTimeRange($start, $end ,$half = true)
+    {
+
+    
+        $array = [];
+        if ($start == $end) {
+            return [$start];
+        }
+
+        if($half){
+            $Interval = 'P0DT0H30M';
+        }else{
+            $Interval = 'P0DT1H';
+        }
+       
+       
+        $period = new DatePeriod(
+            new DateTime($start),
+            new DateInterval($Interval),
+            new DateTime($end)
+        );
+    
+        foreach ($period as $date) {
+            $array[] = $date->format('H:i');
+        }
+
+       
+        if(!$half&&substr($end,-2,2)=='30'){
+
+        }else{
+            $array[] = $end;
+        }
+
+        $rt_arr = [];
+        foreach ($array as $key => $value){
+            if(isset($array[$key+1])){
+                $rt_arr[] = [
+                    'start_key' => $value,
+                    'end_key' => $array[$key+1],
+                    'value' => str_replace(':','_',$value),
+                    'display' => $value.' - '.$array[$key+1]
+                ];
+            }
+            
+        }
+       
+        return $rt_arr;
     }
 
 

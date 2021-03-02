@@ -107,8 +107,11 @@
             autoWidth: true,
             ajax: "/remote/devicelist",
             columns: [
-                {   title: "IP",
-                    data: "ip" 
+                {   title: "區域",
+                    data: "group.name" 
+                },
+                {   title: "群組",
+                    data: "family" 
                 },
                 {   title: "名稱",
                     data: "name" 
@@ -116,12 +119,18 @@
                 {   title: "描述",
                     data: "description" 
                 },
-                {   title: "區域",
-                    data: "group.name" 
-                },
-                
-                {   title: "群組",
-                    data: "family" 
+
+                {   title: "模式",
+                    data: function(k,v){
+                        if(k.mode =="手動"){
+                            rtsv = '<button class="btn btn-xs btn-success" onclick="btn_mode_change(this)"  msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'">手動</button>';
+                        }
+                        else{
+                            rtsv = '<button class="btn btn-xs btn-warning" onclick="btn_mode_change(this)"  msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'">預約</button>';
+                        }
+                        return rtsv;
+                    } 
+               
                 },
                 {   title: "用途",
                     data: "style" 
@@ -129,13 +138,16 @@
                 {   title: "類型",
                     data: "type" 
                 },
+                
+               
+              
                 {   title: "大門控制",
                     className: "my_col",
                     data: function(k,v){
-                       
-                        rtsv = '<button class="btn btn-xs btn-success" onclick="btn_click(this)" msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="1">開</button>\
-                        <button class="btn btn-xs btn-danger" onclick="btn_click(this)" msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="2">關</button>';
-                       
+                        rtsv = '<button class="btn btn-xs btn-success" onclick="btn_click(this)" msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="1">開</button>';
+                        if(k.type=='鐵捲門'){
+                            rtsv = rtsv + ' <button class="btn btn-xs btn-danger" onclick="btn_click(this)" msgtitle="'+k.group.name+'-'+k.family+'-'+k.name+'" target_id="'+k.id+'" relay="2">關</button>';
+                        }
                         return rtsv;
                     } 
                 },
@@ -178,6 +190,21 @@
                         }
                         return rtsv;
                     } 
+                },
+                {   title: "電閘狀態",
+                    className: "my_col",
+                    data: function(k,v){
+                        rtsv = '';
+                        if(k.s2 =="0"){
+                            rtsv = '<button class="btn btn-xs btn-danger" " target_id="'+k.id+'" relay="4">關</button>';
+                          
+                        }
+                        else{
+                            rtsv = '<button class="btn btn-xs btn-success"  target_id="'+k.id+'" relay="4">開</button>';
+                        }
+                      
+                        return rtsv;
+                    } 
                 }
               
               
@@ -187,6 +214,71 @@
         setInterval( function () {
             table.ajax.reload();
         }, 5000 );
+
+        
+        
+
+
+
+        function btn_mode_change(obj){
+            var my = $(obj);
+            var rname = '';
+            if(my.text()=='手動'){
+                rname = '預約';
+            }
+            else{
+                rname = '手動';
+            }
+            
+            var msg = '是否切換 "' + my.attr('msgtitle')+'" 為 "'+rname+'" 模式?'
+
+            BootstrapDialog.confirm({
+                title: '確認',
+                message: msg,
+                type: BootstrapDialog.TYPE_WARNING, // <-- Default value is BootstrapDialog.TYPE_PRIMARY
+                closable: true, // <-- Default value is false
+                draggable: true, // <-- Default value is false
+                btnCancelLabel: '取消', // <-- Default value is 'Cancel',
+                btnOKLabel: '確定', // <-- Default value is 'OK',
+                btnOKClass: 'btn-warning', // <-- If you didn't specify it, dialog type will be used,
+                callback: function(result) {
+                    if(result) {
+                      
+                        var device_id = my.attr('target_id');
+                        var url = '/remote/change-mode/'+device_id+'?mode='+rname;
+                        $.ajax({
+                            type: 'Get',
+                            url: url,
+                            success: function(result){
+                                if(result.status==1){
+                                    alert('Successful.');
+                                }
+                                else{
+                                    alert('Fail.');
+                                }
+                                $($obj).attr('disabled', false);
+                            },
+                            error: function(){
+                                alert('Fail.');
+                                $($obj).attr('disabled', false);
+                            }
+                        });
+
+                        console.log(url);
+
+                    }
+                }
+            });
+
+            }
+
+
+
+
+
+
+
+
 
         function btn_click(obj){
 

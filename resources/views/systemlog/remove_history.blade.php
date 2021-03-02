@@ -108,6 +108,9 @@
             pageLength: 50,
             data: rt_data,
             columns: [
+                {   
+                    title: "註銷時間"
+                },
                 {
                     title: "租借日期",
                 },
@@ -124,10 +127,8 @@
                 
                 {
                     title: "註銷者",
-                },
-                {   
-                    title: "註銷時間"
                 }
+               
             ],
             dom: 'Bfrtip',
             order: [[ 0, 'desc' ]],

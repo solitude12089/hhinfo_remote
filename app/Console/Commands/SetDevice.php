@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Auth;
 use DB;
+use Log;
 class SetDevice extends Command
 {
 	/**
@@ -38,7 +39,8 @@ class SetDevice extends Command
 	 */
 	public function handle()
 	{
-		$nowRanges = date('H');
+        Log::debug(__CLASS__.__Function__.' start ');
+		$nowRanges = date('H:i');
         $toDay = date('Y-m-d');
         $tools = new \App\Tools2000;
         $booking_histories = \App\models\BookingHistory::where('date',$toDay)
@@ -53,42 +55,51 @@ class SetDevice extends Command
 
 
         foreach ($devices as $key => $device) {
-            if(array_key_exists($device->id, $history)){
-                $h = $history[$device->id];
-                if($h->aircontrol==1){
-                    $setData = [
-                        "3"=>"255",
-                        "4"=>"255"
-                    ];
-                 
+            if($device->mode =='預約'){
+                
+
+                if(array_key_exists($device->id, $history)){
+                    $h = $history[$device->id];
+                    if($h->aircontrol==1){
+                        $setData = [
+                            "3"=>"255",
+                            "4"=>"255"
+                        ];
+                     
+                    }
+                    else{
+                        $setData = [
+                            "3"=>"255",
+                            "4"=>"0"
+                        ];
+                       
+                    }
+                   
                 }
                 else{
                     $setData = [
-                        "3"=>"255",
+                        "3"=>"0",
                         "4"=>"0"
                     ];
-                   
+                    
                 }
-               
-            }
-            else{
-                $setData = [
-                    "3"=>"0",
-                    "4"=>"0"
-                ];
-                
-            }
+    
+                $rt = $tools->setStatus($device->id,$setData);
+                if($rt['result']==false){
+                    $error = new \App\models\ScheduleError;
+                    $error->ip = $rt['ip'];
+                    $error->path = $rt['path'];
+                      $msg = DB::connection()->getPdo()->quote(utf8_encode($rt['msg']));
+                    $error->errorMsg = $msg;
+                    $error->save();
+                } # code...
+            
 
-            $rt = $tools->setStatus($device->id,$setData);
-            if($rt['result']==false){
-                $error = new \App\models\ScheduleError;
-                $error->ip = $rt['ip'];
-                $error->path = $rt['path'];
-              	$msg = DB::connection()->getPdo()->quote(utf8_encode($rt['msg']));
-                $error->errorMsg = $msg;
-                $error->save();
-            } # code...
-        }
+
+
+
+            }
+           
 	
 	}
 }

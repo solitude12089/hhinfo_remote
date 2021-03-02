@@ -3,7 +3,7 @@
 'menu'=>1,
 'breadcrumb'=>[
 '系統管理' => '',
-'預約紀錄' => Request::url()
+'冷氣電閘紀錄' => Request::url()
 
 ]
 ])
@@ -59,7 +59,7 @@
 
 <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title">預約紀錄</h3>
+        <h3 class="box-title">冷氣電閘紀錄</h3>
         <div class="box-tools pull-right">
            
         </div>
@@ -109,27 +109,17 @@
             data: rt_data,
             columns: [
                 {   
-                    title: "建立時間"
-                },
-                {
-                    title: "租借日期",
-                },
-                {
-                    title: "租借時段",
-                },
-                {
-                    title: "租借人",
+                    title: "租借人"
                 },
                 {
                     title: "租借地點",
                 },
                 {
-                    title: "冷氣",
+                    title: "開閘時間",
                 },
-                
                 {
-                    title: "建立者",
-                },
+                    title: "關閘時間",
+                }
                
             ],
             dom: 'Bfrtip',

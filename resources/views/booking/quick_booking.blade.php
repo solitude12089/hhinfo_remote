@@ -3,7 +3,7 @@
 'menu'=>1,
 'breadcrumb'=>[
 '租借管理' => '',
-'預約租借' => Request::url()
+'快速預約' => Request::url()
 
 ]
 ])
@@ -32,31 +32,31 @@
             overflow:auto;
         }
         th{
-            width:25px;
-            max-width:25px;
-            min-width:25px;
+            width:100px;
+            max-width:100px;
+            min-width:100px;
             overflow:hidden;
-            height:25px;
-            max-height:25px;
-            min-height:25px;
+            height:50px;
+            max-height:50px;
+            min-height:50px;
             text-align:center;
         }
 
         td{
-            width:25px;
-            max-width:25px;
-            min-width:25px;
+            width:100px;
+            max-width:100px;
+            min-width:100px;
             overflow:hidden;
-            height:25px;
-            max-height:25px;
-            min-height:25px;
+            height:50px;
+            max-height:50px;
+            min-height:50px;
             text-align:center;
         }
         h5{
             color: red;
         }
         .pick-row{
-            height: 25px;
+            height: 50px;
         }
 
 
@@ -71,13 +71,6 @@
             background-color:darkgray;
 
         }
-        .full{
-            background-color:#B22222;
-        }
-
-        .my_th{
-            height: 30px;
-        }
 
     </style>
 
@@ -89,13 +82,15 @@
 
 <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title">預約租借</h3>
+        <h3 class="box-title">快速預約</h3>
     </div>
     <!-- /.box-header -->
     <div class="box-body">
         <div class="row">
-            <form id='postform' action="{{url('/booking')}}" method="POST" enctype="multipart/form-data">
-               <div class="form-group col-lg-12">
+
+      
+            <form id='bookingform'action="/booking/booking" method="POST" enctype="multipart/form-data">
+                <div class="form-group col-lg-12">
                     <label class="control-label">所屬區域</label>
                     <div>
                         <select  id="group" name="group" class="form-control chosen">
@@ -128,6 +123,7 @@
                     </div>
 
                 </div>
+
 
 
                 <div class="form-group col-lg-12">
@@ -172,33 +168,6 @@
 
                 </div>
 
-
-                <div class= "col-lg-12">
-                    <div style="float:right">
-                        <input type="button" id="search" class="btn btn-primary" value="查詢"></input>
-                    </div>
-                </div>
-
-                <!-- /.box-body -->
-            </form>
-        </div>
-    </div>
-    <!-- /.box-body -->
-</div>
-
-
-<div class="box">
-    <div class="box-header with-border">
-        <h3 class="box-title">查詢結果</h3>
-        <div class="box-tools pull-right">
-            <button class="btn btn-primary btn-xs" id="btn_booking">確認預約</button>
-
-        </div>
-    </div>
-    <!-- /.box-header -->
-    <div class="box-body">
-        <div class="row">
-            <form id='bookingform' action="/booking/booking" method="POST" enctype="multipart/form-data">
                 <div class="form-group col-lg-12">
                         <label class="control-label">租借人</label>
                         <div>
@@ -222,19 +191,27 @@
 
                 </div>
 
-                <div id='result'>
+                <div id='hidden_select' hidden>
                 </div>
-
 
                 <div id='selectRange' hidden>
                 </div>
 
-             </form>
 
+
+                <div class= "col-lg-12">
+                    <div style="float:right">
+                        <input type="button" id="booking" class="btn btn-primary" value="預約"></input>
+                    </div>
+                </div>
+
+                <!-- /.box-body -->
+            </form>
         </div>
     </div>
     <!-- /.box-body -->
 </div>
+
 
 
 
@@ -258,9 +235,43 @@
         var timeRanges = <?php echo json_encode($timeRanges); ?>;
 
         $('.chosen').chosen({
-            width:"100%",
-            allow_single_deselect:true
+            width:"100%"
         });
+
+        $('#group').on('change', function(evt, params) {
+            console.log( $('#group').val());
+            $('#family').empty();
+            $('#device').empty();
+            if(devices[$('#group').val()] != null){
+                $.each(devices[$('#group').val()],function(k,f){
+                    $('#family').append('<option value="'+k+'">'+k+'</option>');
+                })
+              
+            }
+            $('#family').trigger("chosen:updated");
+            $('#device').trigger("chosen:updated");
+            if(devices[$('#group').val()] != null){
+                $('#family').trigger('change');
+            }
+        });
+        $('#family').on('change', function(evt, params) {
+            console.log( $('#family').val());
+            $('#device').empty();
+            if(devices[$('#group').val()][ $('#family').val()] != null){
+                $.each(devices[$('#group').val()][ $('#family').val()],function(k,f){
+                    $('#device').append('<option value="'+f.id+'">'+f.name+'</option>');
+                })
+              
+            }
+            $('#device').trigger("chosen:updated");
+          
+        });
+        $('#group').trigger('change');
+
+
+
+
+
 
         $(".chosen-select").chosen_ajax({
             width:"100%",
@@ -329,40 +340,6 @@
             picker.container.find(".calendar-table").hide();
         });
 
-
-
-
-        
-        $('#group').on('change', function(evt, params) {
-            console.log( $('#group').val());
-            $('#family').empty();
-            $('#device').empty();
-            if(devices[$('#group').val()] != null){
-                $.each(devices[$('#group').val()],function(k,f){
-                    $('#family').append('<option value="'+k+'">'+k+'</option>');
-                })
-              
-            }
-            $('#family').trigger("chosen:updated");
-            $('#device').trigger("chosen:updated");
-            if(devices[$('#group').val()] != null){
-                $('#family').trigger('change');
-            }
-        });
-        $('#family').on('change', function(evt, params) {
-            console.log( $('#family').val());
-            $('#device').empty();
-            if(devices[$('#group').val()][ $('#family').val()] != null){
-                $.each(devices[$('#group').val()][ $('#family').val()],function(k,f){
-                    $('#device').append('<option value="'+f.id+'">'+f.name+'</option>');
-                })
-              
-            }
-            $('#device').trigger("chosen:updated");
-          
-        });
-        $('#group').trigger('change');
-
       
 
 
@@ -402,23 +379,72 @@
                     }
 
                 });
-                // console.log(result);
+               
               }
             });
         });
 
 
-        $('#btn_booking').click(function(){
-            console.log('click');
-            var t = $('.idle-select');
-            if(t.length==0){
-                alert('請點選預約時段.');
+
+        $('#booking').click(function(){
+
+            if($('#group').val()==''||$('#group').val()==null){
+                alert('請選擇區域');
+                return;
+            }
+            if($('#family').val()==''||$('#family').val()==null){
+                alert('請選擇群組');
+                return;
+            }
+            if($('#device').val()==''||$('#device').val()==null){
+                alert('請選擇設備名稱');
                 return;
             }
             if($('#customer').val()==''||$('#customer').val()==null){
                 alert('請選擇租借人');
                 return;
             }
+
+
+            var sp_time_s = $('#time').val().split(" - ")[0];
+            var sp_time_e = $('#time').val().split(" - ")[1];
+            var startDate = $('#date').val().split(" - ")[0];
+            var endDate = $('#date').val().split(" - ")[1];
+
+         
+
+            $('#hidden_select').empty();
+            $('#selectRange').empty();
+            var _now_d = startDate;
+
+            while(_now_d <= endDate){
+                if(($('#sp_pick').val()).length!=0){
+                    if($.inArray(moment(_now_d).weekday().toString(), $('#sp_pick').val()) > -1){
+                        //加
+                        var _now_t = sp_time_s;
+                        while(_now_t != sp_time_e){
+                            $('#hidden_select').append('<td class="idle-select" date="'+_now_d+'" start="'+_now_t+'" end="'+timeAdd(_now_t)+'" place="'+$('#device').val()+'"></td>');
+                            _now_t = timeAdd(_now_t);
+                        }
+                    }
+                }else{
+                    //加
+                    var _now_t = sp_time_s;
+                    while(_now_t != sp_time_e){
+                        $('#hidden_select').append('<td class="idle-select" date="'+_now_d+'" start="'+_now_t+'" end="'+timeAdd(_now_t)+'" place="'+$('#device').val()+'"></td>');
+                        _now_t = timeAdd(_now_t);
+                    }
+                }
+               
+                _now_d = dateAdd(_now_d);
+            }
+
+            var t = $('.idle-select');
+            if(t.length==0){
+                alert('請點選預約時段.');
+                return;
+            }
+            
             
             var eventList = groupByRanges(t);
 
@@ -489,6 +515,9 @@
         function timeAdd(_time){
             return moment(moment().format('YYYY-MM-DD')+' '+_time).add(30, 'm').format('HH:mm');
         }
+        function dateAdd(_day){
+            return moment(_day).add(1, 'd').format('YYYY-MM-DD');
+        }
 
         function groupByRanges(t){
             var rtrr = [];
@@ -546,8 +575,6 @@
                 $('.idle-'+target).removeClass('idle-select');
             }
         }
-
-
 
 
 

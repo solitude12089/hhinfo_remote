@@ -280,8 +280,9 @@
             $('#device').append(newOption);
             $.each(devices[$('#group').val()],function(k,f){
                     var newOption = $('<option value="'+f.id+'">'+f.name+'</option>');
-                    $('#device').append(newOption).trigger('chosen:updated');
+                    $('#device').append(newOption);
             });
+            $('#device').trigger('chosen:updated');
         });
 
 

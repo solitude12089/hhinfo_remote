@@ -3,7 +3,7 @@
 'menu'=>1,
 'breadcrumb'=>[
 '系統管理' => '',
-'系統紀錄' => Request::url()
+'操作紀錄' => Request::url()
 
 ]
 ])
@@ -59,7 +59,7 @@
 
 <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title">系統紀錄</h3>
+        <h3 class="box-title">操作紀錄</h3>
         <div class="box-tools pull-right">
            
         </div>

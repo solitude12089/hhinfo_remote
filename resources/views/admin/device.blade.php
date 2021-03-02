@@ -50,6 +50,7 @@
                             <th>描述</th>
                             <th>群組</th>
                             <th>區域</th>
+                            <th>模式</th>
                             <th>用途</th>
                             <th>類型</th>
                             <th>狀態</th>
@@ -68,6 +69,7 @@
                             <td>{{$device->description}}</td>
                             <td>{{$device->family}}</td>
                             <td>{{$groups[$device->group_id]}}</td>
+                            <td>{{$device->mode}}</td>
                             <th>{{$device->style}}</th>
                             <th>{{$device->type}}</th>
                             <td>
@@ -78,7 +80,7 @@
                                 @endif
                             </td>
 
-                            <td>{{$device->synsed_at}}</td>
+                            <td>{{$device->updated_at}}</td>
                             <td><button class="btn btn-primary" target_id="{{$device->id}}"  onclick="action(this)">校時</button></td>
                             <td>
                                 <a data-toggle="modal" data-target="#ajax-modal" href="/admin/device/edit/{{$device->id}}">編輯</a>

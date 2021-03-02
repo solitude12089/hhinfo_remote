@@ -76,6 +76,9 @@
 							<a href="{{ url ('/booking/index') }}">
 								<i class="fa fa-clock-o fa-fw"></i>預約租借
 							</a>
+							<a href="{{ url ('/booking/quick_booking') }}">
+								<i class="fa fa-clock-o fa-fw"></i>快速預約
+							</a>
 
 							<a href="{{ url ('/booking/query') }}">
 								<i class="fa fa-search fa-fw"></i>註銷預約
@@ -105,6 +108,9 @@
 							</a>
 							<a href="{{ url ('/systemlog/remove_history') }}">
 								<i class="fa fa-file-o fa-fw"></i>註銷紀錄
+							</a>
+							<a href="{{ url ('/systemlog/air_log') }}">
+								<i class="fa fa-file-o fa-fw"></i>冷氣電閘紀錄
 							</a>
 						</li>
 					</ul>

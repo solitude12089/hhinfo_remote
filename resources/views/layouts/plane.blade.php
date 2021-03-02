@@ -40,7 +40,7 @@
                     // Animation complete.
                     $(this).remove()
                 });
-            }, 5000);
+            }, 10000);
         </script>
         @endif
         @endforeach

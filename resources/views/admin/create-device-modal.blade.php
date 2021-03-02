@@ -83,6 +83,17 @@
                     </div>
 
                    
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">模式</label>
+                        <div>
+                            <select  id="mode" name="mode" class="form-control chosen">
+                                <option value="手動">手動</option>
+                                <option value="預約">預約</option>
+                            </select>
+
+                        </div>
+                    </div>
+
 
                     <div class="form-group col-lg-12">
                         <label class="control-label">用途</label>
