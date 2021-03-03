@@ -498,7 +498,9 @@ class BookingController extends Controller
     public function MyTimeRange($start, $end ,$half = true)
     {
 
-    
+        if($end=='23:30'){
+            $end = '24:00';
+        }
         $array = [];
         if ($start == $end) {
             return [$start];
@@ -540,7 +542,7 @@ class BookingController extends Controller
             }
             
         }
-       
+   
         return $rt_arr;
     }
 

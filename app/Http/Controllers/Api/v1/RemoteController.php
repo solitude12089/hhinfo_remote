@@ -117,8 +117,15 @@ class RemoteController extends Controller {
 			}else{
 				$searchDevice=[$device->id];
 			}
-			$nowRanges = date('H');
+		
 			$toDay = date('Y-m-d');
+			$nowRanges = date('H');
+			$nowmin = date('i');
+			if($nowmin>=30){
+					$nowRanges = $nowRanges.':30';
+			}else{
+					$nowRanges = $nowRanges.':00';
+			}
 			$booking = \App\models\BookingHistory::where('date',$toDay)
 													->where('range_id',$nowRanges)
 													->where('status',1)
@@ -126,7 +133,6 @@ class RemoteController extends Controller {
 													->whereIn('device_id',$searchDevice)
 													->get()->count();
 			if($booking>0){
-				// SysLog::log('normal',$device->group_id,'swipe return',$customer->id,$device->id,$e_swipe_event->id,'租借時段開門');
 				return $this->opendoor($device,$senser1,$customer->id,$e_swipe_event->id,'租借時段');
 			}
 			else{
@@ -159,7 +165,7 @@ class RemoteController extends Controller {
 
 	public function opendoor($device,$senser,$customer_id,$e_swipe_event_id,$mode,$spcard = null){
 	
-		$serverip = '114.35.246.115';
+		$serverip = env('SERVER_IP');
 		if($device->type=='鐵捲門')
 		{
 			$opentime='1';

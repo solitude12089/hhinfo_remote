@@ -32,9 +32,9 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')
         //          ->hourly();
 
-        $schedule->command('command:setdevice')
-                ->cron('*/30 * * * *')
-                ->withoutOverlapping();
+        // $schedule->command('command:setdevice')
+        //         ->cron('*/30 * * * *')
+        //         ->withoutOverlapping();
         $schedule->command('command:setdevicetime')
                 ->cron('0 */2 * * *')
                 ->withoutOverlapping();
