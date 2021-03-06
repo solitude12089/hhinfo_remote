@@ -71,6 +71,23 @@
             background-color:darkgray;
 
         }
+        .my_chosen{
+            height: 34px;
+            padding: 6px 12px;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #555;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
+            box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
+            -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+            -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+            transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        }
+        .my_chosen > option:disabled {
+            background: #ccc;
+        }
 
     </style>
 
@@ -140,10 +157,36 @@
                 <div class="form-group col-lg-12">
                     <label class="control-label">選擇時段</label>
                     <div>
-                        <input  id="time" name="time" class="form-control">
-
-
-                        </input>
+                        <select class="my_chosen" id="time_start_h" name="time_start[]" class="form-control">
+                            @foreach($hours as $key => $value)
+                                @if($value!='24')
+                                    @if($value=='8')
+                                    <option selected value="{{$value}}">{{$value}}</option>
+                                    @else
+                                    <option value="{{$value}}">{{$value}}</option>
+                                    @endif
+                                @endif
+                            @endforeach
+                        </select>
+                        <select class="my_chosen" id="time_start_i" name="time_start[]" class="form-control">
+                            <option value="00">00</option>
+                            <option value="30">30</option>
+                        </select>
+                        <label style="padding: 10px 30px;"> ~ </label>
+                        <select class="my_chosen" id="time_end_h" name="time_end[]" class="form-control">
+                            @foreach($hours as $key => $value)
+                                @if($value=='22')
+                                <option selected value="{{$value}}">{{$value}}</option>
+                                @else
+                                <option value="{{$value}}">{{$value}}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        <select class="my_chosen" id="time_end_i" name="time_end[]" class="form-control">
+                            <option value="00">00</option>
+                            <option value="30">30</option>
+                        </select>
+                       
 
                     </div>
 
@@ -325,64 +368,51 @@
             },
         });
 
-        var time = $('#time').daterangepicker({
-            startDate: "08:00",
-            endDate: "22:00",
-            timePicker: true,
-            timePicker24Hour: true,
-            timePickerIncrement: 30,
-            timePickerSeconds: false,
+        $('#time_start_h').on('change', function(evt, params) {
+            console.log( $('#time_start_h').val());
+            var start_h = $('#time_start_h').find('option:selected').val();
+            var end_h =$('#time_end_h').find('option:selected').val();
+            var target_h = parseInt(start_h)+1;
+           
+            $('#time_end_h').find('option').filter(function() {
+                        return $(this).val() < target_h;
+                }).attr('disabled','disabled');
+
+            $('#time_end_h').find('option').filter(function() {
+                        return $(this).val() >= target_h;
+            }).removeAttr('disabled');
+
+
+            if(end_h<target_h){
+                $('#time_end_h').find('option:selected').removeAttr("selected");
             
-            locale: {
-                format: 'HH:mm'
+                $('#time_end_h').find('option').filter(function() {
+                        return $(this).val() == target_h;
+                }).attr('selected','selected');
+                
+                $('#time_end_h').trigger('change');
+                
             }
-        }).on('show.daterangepicker', function (ev, picker) {
-            picker.container.find(".calendar-table").hide();
+
+        });
+
+        $('#time_end_h').on('change', function(evt, params) {
+            var end_h =$('#time_end_h').find('option:selected').val();
+            if(end_h=='24'){
+                $('#time_end_i').val('00');
+                $('#time_end_i').find('option:eq(1)').attr('disabled','disabled');
+            }
+            else{
+                $('#time_end_i').find('option:eq(1)').removeAttr('disabled');
+            }
+
         });
 
       
 
 
 
-        $('#search').on('click',function(){
-            var group = $('#group').val();
-            var device = $('#device').val();
-            var startDate = $('#date').val().split(" - ")[0];
-            var endDate = $('#date').val().split(" - ")[1];
-            var sp_pick = $('#sp_pick').val();
-            var sp_time_s = $('#time').val().split(" - ")[0];
-            var sp_time_e = $('#time').val().split(" - ")[1];
-            var url = '/booking/search'
-            $.ajax({
-              type: 'POST',
-              url: url,
-              data: {
-                'group':group,
-                'device':device,
-                'startDate':startDate,
-                'endDate':endDate,
-                'sp_pick':sp_pick,
-                'sp_time_s':sp_time_s,
-                'sp_time_e':sp_time_e
-              },
-              success: function(result){
-                $('#result').empty();
-                $('#result').append(result);
-
-                $('.idle').click(function(){
-                    console.log(this);
-                    if($(this).hasClass('idle-select')){
-                        $(this).removeClass('idle-select');
-                    }
-                    else{
-                        $(this).addClass('idle-select');
-                    }
-
-                });
-               
-              }
-            });
-        });
+      
 
 
 
@@ -406,8 +436,8 @@
             }
 
 
-            var sp_time_s = $('#time').val().split(" - ")[0];
-            var sp_time_e = $('#time').val().split(" - ")[1];
+            var sp_time_s = zeroPad($('#time_start_h').val())+':'+$('#time_start_i').val();
+            var sp_time_e = zeroPad($('#time_end_h').val())+':'+$('#time_end_i').val();
             var startDate = $('#date').val().split(" - ")[0];
             var endDate = $('#date').val().split(" - ")[1];
 
@@ -513,6 +543,9 @@
         });
 
         function timeAdd(_time){
+            if(_time=='23:30'){
+                return '24:00';
+            }
             return moment(moment().format('YYYY-MM-DD')+' '+_time).add(30, 'm').format('HH:mm');
         }
         function dateAdd(_day){
@@ -574,6 +607,10 @@
             else{
                 $('.idle-'+target).removeClass('idle-select');
             }
+        }
+
+        function zeroPad(numberStr) {
+            return numberStr.padStart(2, "0");
         }
 
 

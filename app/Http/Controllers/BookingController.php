@@ -18,7 +18,15 @@ class BookingController extends Controller
         $devices=[];
         $deviceMap = [];
         $timeRanges = [];
-        $_timeRanges = $this->MyTimeRange('00:00','23:30',true);
+        $_timeRanges = $this->MyTimeRange('00:00','24:00',true);
+
+        for ($x = 1; $x <= 24; $x++) {
+            $hours[] = $x;
+        }
+
+       
+
+
         foreach ($_timeRanges as $key => $value){
             
             $timeRanges[$value['start_key']] = [
@@ -49,7 +57,7 @@ class BookingController extends Controller
 
         $customers = \App\models\Customer::where('status', 1)->get();
 
-        return view('booking.index', ['devices' => $devices, 'groups' => $groups,'timeRanges' => $timeRanges, 'customers' => $customers,'deviceMap'=>$deviceMap]);
+        return view('booking.index', ['devices' => $devices, 'groups' => $groups,'timeRanges' => $timeRanges, 'customers' => $customers,'deviceMap'=>$deviceMap , 'hours' => $hours]);
     }
 
 
@@ -60,7 +68,10 @@ class BookingController extends Controller
         $devices=[];
         $deviceMap = [];
         $timeRanges = [];
-        $_timeRanges = $this->MyTimeRange('00:00','23:30',true);
+        $_timeRanges = $this->MyTimeRange('00:00','24:00',true);
+        for ($x = 1; $x <= 24; $x++) {
+            $hours[] = $x;
+        }
         foreach ($_timeRanges as $key => $value){
             
             $timeRanges[$value['start_key']] = [
@@ -91,7 +102,7 @@ class BookingController extends Controller
 
         //dd($devices); 
 
-        return view('booking.quick_booking', ['devices' => $devices, 'groups' => $groups,'timeRanges' => $timeRanges, 'customers' => $customers,'deviceMap'=>$deviceMap]);
+        return view('booking.quick_booking', ['devices' => $devices, 'groups' => $groups,'timeRanges' => $timeRanges, 'customers' => $customers,'deviceMap'=>$deviceMap,'hours' => $hours]);
     }
     public function postSearch(Request $request)
     {
@@ -228,8 +239,13 @@ class BookingController extends Controller
                     foreach ($arr2 as $key => $range_id) {
                         $time = new DateTime($range_id);
                         $time->add(new DateInterval('PT30M'));
-                        $endtime = $time->format('H:i');
-
+                        if($range_id == '23:30'){
+                            $endtime = '24:00';
+                        }
+                        else{   
+                            $endtime = $time->format('H:i');
+                        }
+                    
 
                         $bh = new \App\models\BookingHistory;
                         $bh->device_id = $device_id;
@@ -498,9 +514,6 @@ class BookingController extends Controller
     public function MyTimeRange($start, $end ,$half = true)
     {
 
-        if($end=='23:30'){
-            $end = '24:00';
-        }
         $array = [];
         if ($start == $end) {
             return [$start];

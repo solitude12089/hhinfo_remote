@@ -79,6 +79,24 @@
             height: 30px;
         }
 
+        .my_chosen{
+            height: 34px;
+            padding: 6px 12px;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #555;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
+            box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
+            -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+            -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+            transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        }
+        .my_chosen > option:disabled {
+            background: #ccc;
+        }
+
     </style>
 
 @stop
@@ -144,10 +162,36 @@
                 <div class="form-group col-lg-12">
                     <label class="control-label">選擇時段</label>
                     <div>
-                        <input  id="time" name="time" class="form-control">
-
-
-                        </input>
+                        <select class="my_chosen" id="time_start_h" name="time_start[]" class="form-control">
+                            @foreach($hours as $key => $value)
+                                @if($value!='24')
+                                    @if($value=='8')
+                                    <option selected value="{{$value}}">{{$value}}</option>
+                                    @else
+                                    <option value="{{$value}}">{{$value}}</option>
+                                    @endif
+                                @endif
+                            @endforeach
+                        </select>
+                        <select class="my_chosen" id="time_start_i" name="time_start[]" class="form-control">
+                            <option value="00">00</option>
+                            <option value="30">30</option>
+                        </select>
+                        <label style="padding: 10px 30px;"> ~ </label>
+                        <select class="my_chosen" id="time_end_h" name="time_end[]" class="form-control">
+                            @foreach($hours as $key => $value)
+                                @if($value=='22')
+                                <option selected value="{{$value}}">{{$value}}</option>
+                                @else
+                                <option value="{{$value}}">{{$value}}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        <select class="my_chosen" id="time_end_i" name="time_end[]" class="form-control">
+                            <option value="00">00</option>
+                            <option value="30">30</option>
+                        </select>
+                       
 
                     </div>
 
@@ -363,6 +407,46 @@
         });
         $('#group').trigger('change');
 
+
+        $('#time_start_h').on('change', function(evt, params) {
+            console.log( $('#time_start_h').val());
+            var start_h = $('#time_start_h').find('option:selected').val();
+            var end_h =$('#time_end_h').find('option:selected').val();
+            var target_h = parseInt(start_h)+1;
+           
+            $('#time_end_h').find('option').filter(function() {
+                        return $(this).val() < target_h;
+                }).attr('disabled','disabled');
+
+            $('#time_end_h').find('option').filter(function() {
+                        return $(this).val() >= target_h;
+            }).removeAttr('disabled');
+
+
+            if(end_h<target_h){
+                $('#time_end_h').find('option:selected').removeAttr("selected");
+            
+                $('#time_end_h').find('option').filter(function() {
+                        return $(this).val() == target_h;
+                }).attr('selected','selected');
+                
+                $('#time_end_h').trigger('change');
+                
+            }
+
+        });
+
+        $('#time_end_h').on('change', function(evt, params) {
+            var end_h =$('#time_end_h').find('option:selected').val();
+            if(end_h=='24'){
+                $('#time_end_i').val('00');
+                $('#time_end_i').find('option:eq(1)').attr('disabled','disabled');
+            }
+            else{
+                $('#time_end_i').find('option:eq(1)').removeAttr('disabled');
+            }
+
+        });
       
 
 
@@ -373,8 +457,8 @@
             var startDate = $('#date').val().split(" - ")[0];
             var endDate = $('#date').val().split(" - ")[1];
             var sp_pick = $('#sp_pick').val();
-            var sp_time_s = $('#time').val().split(" - ")[0];
-            var sp_time_e = $('#time').val().split(" - ")[1];
+            var sp_time_s = $('#time_start_h').val()+':'+$('#time_start_i').val();
+            var sp_time_e = $('#time_end_h').val()+':'+$('#time_end_i').val();
             var url = '/booking/search'
             $.ajax({
               type: 'POST',
