@@ -369,44 +369,39 @@
         });
 
         $('#time_start_h').on('change', function(evt, params) {
-            console.log( $('#time_start_h').val());
-            var start_h = $('#time_start_h').find('option:selected').val();
-            var end_h =$('#time_end_h').find('option:selected').val();
-            var target_h = parseInt(start_h)+1;
-           
+            limit_time();
+        });
+
+        $('#time_start_i').on('change', function(evt, params) {
+            limit_time();
+        })
+
+        function limit_time(){
+            var start_moment = moment(moment().format('YYYY-MM-DD')+' '+$('#time_start_h').find('option:selected').val()+':'+$('#time_start_i').find('option:selected').val()); 
+            var end_moment = moment(moment().format('YYYY-MM-DD')+' '+$('#time_end_h').find('option:selected').val()+':'+$('#time_end_i').find('option:selected').val()); 
+            var t_end_moment = start_moment.add(30, 'minutes'); 
             $('#time_end_h').find('option').filter(function() {
-                        return $(this).val() < target_h;
+                        return parseInt($(this).val()) < t_end_moment.format('H');
                 }).attr('disabled','disabled');
 
             $('#time_end_h').find('option').filter(function() {
-                        return $(this).val() >= target_h;
+                        return parseInt($(this).val()) >= t_end_moment.format('H');
             }).removeAttr('disabled');
-
-
-            if(end_h<target_h){
+            if(t_end_moment > end_moment){
                 $('#time_end_h').find('option:selected').removeAttr("selected");
-            
+                $('#time_end_i').find('option:selected').removeAttr("selected");
                 $('#time_end_h').find('option').filter(function() {
-                        return $(this).val() == target_h;
+                        return $(this).val() == t_end_moment.format('H');
                 }).attr('selected','selected');
-                
-                $('#time_end_h').trigger('change');
-                
+                $('#time_end_i').find('option').filter(function() {
+                        return $(this).val() == t_end_moment.format('mm');
+                }).attr('selected','selected');
             }
+        }
+        limit_time();
+     
 
-        });
-
-        $('#time_end_h').on('change', function(evt, params) {
-            var end_h =$('#time_end_h').find('option:selected').val();
-            if(end_h=='24'){
-                $('#time_end_i').val('00');
-                $('#time_end_i').find('option:eq(1)').attr('disabled','disabled');
-            }
-            else{
-                $('#time_end_i').find('option:eq(1)').removeAttr('disabled');
-            }
-
-        });
+      
 
       
 
@@ -430,14 +425,20 @@
                 alert('請選擇設備名稱');
                 return;
             }
+            var sp_time_s = zeroPad($('#time_start_h').val())+':'+$('#time_start_i').val();
+            var sp_time_e = zeroPad($('#time_end_h').val())+':'+$('#time_end_i').val();
+
+            if(sp_time_s == sp_time_e){
+                alert('選擇時段有誤 請重新選擇.');
+                return;
+            }
             if($('#customer').val()==''||$('#customer').val()==null){
                 alert('請選擇租借人');
                 return;
             }
 
 
-            var sp_time_s = zeroPad($('#time_start_h').val())+':'+$('#time_start_i').val();
-            var sp_time_e = zeroPad($('#time_end_h').val())+':'+$('#time_end_i').val();
+            
             var startDate = $('#date').val().split(" - ")[0];
             var endDate = $('#date').val().split(" - ")[1];
 

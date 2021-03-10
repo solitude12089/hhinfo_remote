@@ -7,54 +7,58 @@
 	<table  class="table table-bordered">
 			<thead>
 				<tr>
-				 	@foreach($timeRanges as $tk =>$time)
-						@if($tk==0)
-							@if(substr($time['value'],-2,2)==30)
-								<th class="my_th" colspan=1>{{$time['start_key']}}</th>
-							@else
-								<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
-							@endif
-						@else
-							@if(isset($timeRanges[$tk+1]))
-								@if(substr($timeRanges[0]['value'],-2,2)==30)
-									@if($tk%2==1)
-										<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
-									@endif
-								@else
-									@if($tk%2==0)
-										<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
-									@endif
-								@endif
-							@else
+					@if(count($timeRanges)==1)
+						<th class="my_th" colspan=1>{{$timeRanges[0]['start_key']}}</th>
+					@else
+						@foreach($timeRanges as $tk =>$time)
+							@if($tk==0)
 								@if(substr($time['value'],-2,2)==30)
+									<th class="my_th" colspan=1>{{$time['start_key']}}</th>
+								@else
+									<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
+								@endif
+							@else
+								@if(isset($timeRanges[$tk+1]))
 									@if(substr($timeRanges[0]['value'],-2,2)==30)
 										@if($tk%2==1)
-											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
 										@endif
 									@else
 										@if($tk%2==0)
-											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
 										@endif
 									@endif
 								@else
-									@if(substr($timeRanges[0]['value'],-2,2)==30)
-										@if($tk%2==1)
-											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+									@if(substr($time['value'],-2,2)==30)
+										@if(substr($timeRanges[0]['value'],-2,2)==30)
+											@if($tk%2==1)
+												<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											@endif
+										@else
+											@if($tk%2==0)
+												<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											@endif
 										@endif
 									@else
-										@if($tk%2==0)
-											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+										@if(substr($timeRanges[0]['value'],-2,2)==30)
+											@if($tk%2==1)
+												<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											@endif
+										@else
+											@if($tk%2==0)
+												<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											@endif
 										@endif
 									@endif
+
 								@endif
+								
+								<!-- if($tk) -->
+								
 
 							@endif
-							
-							<!-- if($tk) -->
-							
-
-						@endif
-                    @endforeach
+						@endforeach
+					@endif
                 </tr>
 			</thead>
 			<tbody>
@@ -71,54 +75,58 @@
 		<table class="table table-bordered">
 			<thead>
 				 <tr>
-				 	@foreach($timeRanges as $tk =>$time)
-						@if($tk==0)
-							@if(substr($time['value'],-2,2)==30)
-								<th class="my_th" colspan=1>{{$time['start_key']}}</th>
-							@else
-								<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
-							@endif
-						@else
-							@if(isset($timeRanges[$tk+1]))
-								@if(substr($timeRanges[0]['value'],-2,2)==30)
-									@if($tk%2==1)
-										<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
-									@endif
-								@else
-									@if($tk%2==0)
-										<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
-									@endif
-								@endif
-							@else
+				 	@if(count($timeRanges)==1)
+						<th class="my_th" colspan=1>{{$timeRanges[0]['start_key']}}</th>
+					@else
+						@foreach($timeRanges as $tk =>$time)
+							@if($tk==0)
 								@if(substr($time['value'],-2,2)==30)
+									<th class="my_th" colspan=1>{{$time['start_key']}}</th>
+								@else
+									<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
+								@endif
+							@else
+								@if(isset($timeRanges[$tk+1]))
 									@if(substr($timeRanges[0]['value'],-2,2)==30)
 										@if($tk%2==1)
-											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
 										@endif
 									@else
 										@if($tk%2==0)
-											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											<th class="my_th" colspan=2>{{substr($time['start_key'],0,2)}}-{{substr($timeRanges[($tk)+1]['end_key'],0,2)}}</th>
 										@endif
 									@endif
 								@else
-									@if(substr($timeRanges[0]['value'],-2,2)==30)
-										@if($tk%2==1)
-											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+									@if(substr($time['value'],-2,2)==30)
+										@if(substr($timeRanges[0]['value'],-2,2)==30)
+											@if($tk%2==1)
+												<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											@endif
+										@else
+											@if($tk%2==0)
+												<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											@endif
 										@endif
 									@else
-										@if($tk%2==0)
-											<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+										@if(substr($timeRanges[0]['value'],-2,2)==30)
+											@if($tk%2==1)
+												<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											@endif
+										@else
+											@if($tk%2==0)
+												<th class="my_th" colspan=2>{{$time['start_key']}}</th>
+											@endif
 										@endif
 									@endif
+
 								@endif
+								
+								<!-- if($tk) -->
+								
 
 							@endif
-							
-							<!-- if($tk) -->
-							
-
-						@endif
-                    @endforeach
+						@endforeach
+					@endif
                 </tr>
 			</thead>
 			<tbody>
