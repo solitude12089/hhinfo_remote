@@ -488,7 +488,18 @@ class PhoneController extends Controller {
 			}else{
 				$searchDevice=[$device->id];
 			}
+
+
+
 			$nowRanges = date('H');
+			$nowmin = date('i');
+			if($nowmin>=30){
+					$nowRanges = $nowRanges.':30';
+			}else{
+					$nowRanges = $nowRanges.':00';
+			}
+
+		
 			$toDay = date('Y-m-d');
 			$booking = \App\models\BookingHistory::where('date',$toDay)
 													->where('range_id',$nowRanges)

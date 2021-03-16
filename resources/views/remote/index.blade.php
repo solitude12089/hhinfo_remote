@@ -284,7 +284,13 @@
 
             var my = $(obj);
             var relay = my.attr('relay');
-            var ac = my.text()=='開'?'0':'1';
+            var ac ='';
+            if(relay<'3'){
+                ac = my.text()=='開'?'1':'0';
+            }else{
+                ac = my.text()=='開'?'0':'1';
+            }
+          
             var rname = '';
             var msg = '';
             if(relay=="1"){
