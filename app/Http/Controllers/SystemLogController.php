@@ -161,6 +161,9 @@ class SystemLogController extends Controller
             foreach($tv['msg'] as $tvmk => $tvmv){
                 $msg = $msg.$tvmv.'<br>';
             }
+            if(!isset($tv['date'])){
+                $tv['date'] = '';
+            }
             $rt_data[] = [
                 $tv['date'],
                 $tv['user'],
