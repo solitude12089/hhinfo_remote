@@ -98,12 +98,11 @@ class SetDevice extends Command
 
         foreach($device as $key => $value){
             if(!in_array($key,$send_history)){
-                dd($device,$value);
                 $setData = [
                     "3"=>"0",
                     "4"=>"0"
                 ];
-                $rt = $tools->setStatus($device->id,$setData);
+                $rt = $tools->setStatus($value->id,$setData);
                 if($rt['result']==false){
                     $error = new \App\models\ScheduleError;
                     $error->ip = $rt['ip'];
