@@ -14,8 +14,8 @@ class PhoneController extends Controller {
 	public function __construct()
     {
         $this->normal_btnMap = [
-			'btn_r1_on' => '鐵捲門-開',
-			'btn_r2_on'=> '鐵捲門-關',
+			'btn_r1_on' => '一般門-開',
+			'btn_r2_on'=> '一般門-關',
 			'btn_r3_on'=> '一般用電-開',
 			'btn_r3_off' =>'一般用電-關',
 			'btn_r4_on'=> '冷氣用電-開',
@@ -23,8 +23,8 @@ class PhoneController extends Controller {
 		];
 
 		$this->iron_btnMap = [
-			'btn_r1_on' => '一般門-開',
-			'btn_r2_on'=> '一般門-關',
+			'btn_r1_on' => '鐵捲門-開',
+			'btn_r2_on'=> '鐵捲門-關',
 			'btn_r3_on'=> '一般用電-開',
 			'btn_r3_off' =>'一般用電-關',
 			'btn_r4_on'=> '冷氣用電-開',
@@ -218,78 +218,53 @@ class PhoneController extends Controller {
 													->get();
 						if(count($devices)!==0){
 							foreach($devices as $dk => $device){
+								if(in_array($device->id,$check_repeat)){
+									continue;
+								}
+								$menu = [];
 								if($device->type=='一般'){
-									if(in_array($device->id,$check_repeat)){
-										continue;
-									}
-									$rt_menu[] = [
-										'device_id' => $device->id,
-										'display_name' => $device->family.'-'.$device->name,
-										'menu' =>[
-											(object)[
-												'id' => 'btn_r1_on',
-												'name' => $this->normal_btnMap['btn_r1_on']
-											],
-											(object)[
-												'id' => 'btn_r2_on',
-												'name' => $this->normal_btnMap['btn_r2_on']
-											],
-											(object)[
-												'id' => 'btn_r3_on',
-												'name' => $this->normal_btnMap['btn_r3_on']
-											],
-											(object)[
-												'id' => 'btn_r3_off',
-												'name' => $this->normal_btnMap['btn_r3_off']
-											],
-											(object)[
-												'id' => 'btn_r4_on',
-												'name' => $this->normal_btnMap['btn_r4_on']
-											],
-											(object)[
-												'id' => 'btn_r4_off',
-												'name' => $this->normal_btnMap['btn_r4_off']
-											]
-										]
+									$menu[] = (object)[
+										'id' => 'btn_r1_on',
+										'name' => $this->normal_btnMap['btn_r1_on']
 									];
-									$check_repeat[]=$device->id;
-								}
-								else{
-									if(in_array($device->id,$check_repeat)){
-										continue;
-									}
-									$rt_menu[] = [
-										'device_id' => $device->id,
-										'display_name' => $device->family.'-'.$device->name,
-										'menu' =>[
-											(object)[
-												'id' => 'btn_r1_on',
-												'name' => $this->iron_btnMap['btn_r1_on']
-											],
-											(object)[
-												'id' => 'btn_r2_on',
-												'name' => $this->iron_btnMap['btn_r2_on']
-											],
-											(object)[
-												'id' => 'btn_r3_on',
-												'name' => $this->iron_btnMap['btn_r3_on']
-											],
-											(object)[
-												'id' => 'btn_r3_off',
-												'name' => $this->iron_btnMap['btn_r3_off']
-											],
-											(object)[
-												'id' => 'btn_r4_on',
-												'name' => $this->iron_btnMap['btn_r4_on']
-											],
-											(object)[
-												'id' => 'btn_r4_off',
-												'name' => $this->iron_btnMap['btn_r4_off']
-											]
-										]
+								}else{
+									$menu[] =(object)[
+										'id' => 'btn_r1_on',
+										'name' => $this->iron_btnMap['btn_r1_on']
 									];
-									$check_repeat[]=$device->id;
+									$menu[]=(object)[
+										'id' => 'btn_r2_on',
+										'name' => $this->iron_btnMap['btn_r2_on']
+									];
 								}
+								
+								if(isset($spcard->authority)&&$spcard->authority!=null&&in_array(3,$spcard->authority)){
+									$menu[]=(object)[
+										'id' => 'btn_r3_on',
+										'name' => $this->normal_btnMap['btn_r3_on']
+									];
+									$menu[]=(object)[
+										'id' => 'btn_r3_off',
+										'name' => $this->normal_btnMap['btn_r3_off']
+									];
+								}
+								if(isset($spcard->authority)&&$spcard->authority!=null&&in_array(4,$spcard->authority)){
+									$menu[]=(object)[
+										'id' => 'btn_r4_on',
+										'name' => $this->normal_btnMap['btn_r4_on']
+									];
+									$menu[]=(object)[
+										'id' => 'btn_r4_off',
+										'name' => $this->normal_btnMap['btn_r4_off']
+									];
+								}
+								
+								$rt_menu[] = [
+									'device_id' => $device->id,
+									'display_name' => $device->family.'-'.$device->name,
+									'menu' => $menu
+								];
+								$check_repeat[]=$device->id;
 								
 							}
 						}
@@ -297,6 +272,13 @@ class PhoneController extends Controller {
 				}
 			}
 			$nowRanges = date('H');
+			$nowmin = date('i');
+			if($nowmin>=30){
+					$nowRanges = $nowRanges.':30';
+			}else{
+					$nowRanges = $nowRanges.':00';
+			}
+
 			$toDay = date('Y-m-d');
 			$bookings = \App\models\BookingHistory::with('device')
 												->where('date',$toDay)
@@ -399,15 +381,17 @@ class PhoneController extends Controller {
 											->where('status',1)
 											->where('customer_id',$customer->id)
 											->get();
+			
 			if(count($over_bookings)>0){
 				foreach ($over_bookings as $obk => $obooking){
-					if($obooking->device->type=='鐵捲門'){
+					$device = $obooking->device;
+					if($device->type=='鐵捲門'){
 						if(in_array($device->id,$check_repeat)){
 							continue;
 						}
 						$rt_menu[] = [
-							'device_id' => $booking->device->id,
-							'display_name' => $booking->device->family.'-'.$booking->device->name,
+							'device_id' => $device->id,
+							'display_name' => $device->family.'-'.$device->name,
 							'menu' =>[
 								(object)[
 									'id' => 'btn_r2_on',

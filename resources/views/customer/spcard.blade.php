@@ -104,7 +104,7 @@
     <script src="/js/datatables.min.js"></script>
     <script src="/js/bootstrap-dialog.min.js"></script>
     <script>
-    
+        $('.dataTable').dataTable();
         function remove(obj){
             console.log(obj);
             var name = $($(obj).parents('tr').children('td')[1]).text();
