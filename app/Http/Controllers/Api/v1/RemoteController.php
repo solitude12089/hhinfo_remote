@@ -47,6 +47,7 @@ class RemoteController extends Controller {
 			$s5 = isset($data['s5status'])?$data['s5status']:"";
 			$s6 = isset($data['s6status'])?$data['s6status']:"";
 			$device->update([
+				'synced_at' => date('Y-m-d H:i:s'),
 				'r1' => $r1,
 				'r2' => $r2,
 				'r3'  => $r3,
@@ -154,7 +155,7 @@ class RemoteController extends Controller {
 			}
 		}
 		catch(\Exception $e){
-			dd($e);
+			Log::debug(__Function__."The exception was created on line: " . $e->getLine().' msg: '.$e->getMessage());
 		}
 	}
 

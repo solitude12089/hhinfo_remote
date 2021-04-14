@@ -110,7 +110,7 @@
     <script src="/js/datatables.min.js"></script>
     <script src="/js/bootstrap-dialog.min.js"></script>
     <script>
-         $('.dataTable').dataTable();
+        $('.dataTable').dataTable();
     </script>
 
 @stop

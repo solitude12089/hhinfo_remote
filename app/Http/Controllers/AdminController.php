@@ -336,6 +336,8 @@ class AdminController extends Controller
         $new_device->mode = $data['mode'];
         $new_device->style = $data['style'];
         $new_device->type = $data['type'];
+        $new_device->is_booking = $data['is_booking'];
+        $new_device->kernel = $data['kernel'];
         $new_device->save();
         return redirect('admin/device')->with('alert-success', '設備建立成功.');
     }
@@ -409,6 +411,8 @@ class AdminController extends Controller
         $olddevice->mode = $data['mode'];
         $olddevice->style = $data['style'];
         $olddevice->type = $data['type'];
+        $olddevice->is_booking = $data['is_booking'];
+        $olddevice->kernel = $data['kernel'];
         $olddevice->save();
 
     

@@ -54,6 +54,8 @@
                             <th>用途</th>
                             <th>類型</th>
                             <th>狀態</th>
+                            <th>預約可否</th>
+                            <th>核心版本</th>
                             <th>最後同步時間</th>
                             <th>Action</th>
                             <th></th>
@@ -79,7 +81,14 @@
                                     <label style="color:red">關閉</label>
                                 @endif
                             </td>
-
+                            <th>
+                                @if($device->is_booking==1)
+                                    <label style="color:green">可</label>
+                                @else
+                                    <label style="color:red">不可</label>
+                                @endif
+                            </th>
+                            <th>{{$device->kernel}}</th>
                             <td>{{$device->updated_at}}</td>
                             <td><button class="btn btn-primary" target_id="{{$device->id}}"  onclick="action(this)">校時</button></td>
                             <td>

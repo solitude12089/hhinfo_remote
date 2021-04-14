@@ -25,6 +25,8 @@ class CreateDevicesTable extends Migration
             $table->string('style')->default('一般');
             $table->string('type')->default('一般');
             $table->integer('status')->default(1);
+            $table->integer('is_booking')->default(1);
+            $table->string('kernel')->default('2000');
             $table->string('r1')->nullable();
             $table->string('r2')->nullable();
             $table->string('r3')->nullable();

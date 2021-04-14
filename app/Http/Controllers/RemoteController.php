@@ -10,6 +10,11 @@ class RemoteController extends Controller
 
 
     public function test(){
+        $Tools_2000 =  new \App\Tools2000;
+        //http://114.35.246.115:8080/api/v1/phone/menu
+        $rt = $Tools_2000->httpClient_v2('127.0.0.1:8080','post','/api/v1/phone/menu',null);
+        dd($rt);
+
         $nowRanges = date('H');
         $toDay = date('Y-m-d');
         $tools = new \App\Tools2000;
@@ -273,19 +278,27 @@ class RemoteController extends Controller
         foreach($devices as $key => $device){
             $rt = $tools->getStatus($device->id);
            
+            
+
+
+
             if($rt['result']==true){
-             
                 $data = $rt['data'];
-                $r1 = isset($data['r1ststus'])?$data['r1ststus']:"";
-                $r2 = isset($data['r2ststus'])?$data['r2ststus']:"";
-                $r3 = isset($data['r3ststus'])?$data['r3ststus']:"";
-                $r4 = isset($data['r4ststus'])?$data['r4ststus']:"";
-                $s1 = isset($data['s1status'])?$data['s1status']:"";
-                $s2 = isset($data['s2status'])?$data['s2status']:"";
-                $s3 = isset($data['s3status'])?$data['s3status']:"";
-                $s4 = isset($data['s4status'])?$data['s4status']:"";
-                $s5 = isset($data['s5status'])?$data['s5status']:"";
-                $s6 = isset($data['s6status'])?$data['s6status']:"";
+                $relays = (array)$rt['data']['relay'];
+                $sensors = (array)$rt['data']['sensor'];
+          
+            
+                $r1 = isset($relays["1"])?$relays["1"]:"";
+                $r2 = isset($relays['2'])?$relays['2']:"";
+                $r3 = isset($relays['3'])?$relays['3']:"";
+                $r4 = isset($relays['4'])?$relays['4']:"";
+                $s1 = isset($sensors['1'])?$sensors['1']:"";
+                $s2 = isset($sensors['2'])?$sensors['2']:"";
+                $s3 = isset($sensors['3'])?$sensors['3']:"";
+                $s4 = isset($sensors['4'])?$sensors['4']:"";
+                $s5 = isset($sensors['5'])?$sensors['5']:"";
+                $s6 = isset($sensors['6'])?$sensors['6']:"";
+             
           
                 $device->update([
                     'r1' => $r1,

@@ -39,12 +39,12 @@ class BookingController extends Controller
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::whereIn('group_id', $ugp)
                                             ->where('status',1)
-                                            ->where('style','=','一般')
+                                            ->where('is_booking','=','1')
                                             ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::where('status',1)
-                                        ->where('style','=','一般')
+                                        ->where('is_booking','=','1')
                                         ->get();
         }
 
@@ -84,12 +84,12 @@ class BookingController extends Controller
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::whereIn('group_id', $ugp)
                                             ->where('status',1)
-                                            ->where('style','=','一般')
+                                            ->where('is_booking','=','1')
                                             ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::where('status',1)
-                                        ->where('style','=','一般')
+                                        ->where('is_booking','=','1')
                                         ->get();
         }
 
@@ -117,7 +117,7 @@ class BookingController extends Controller
                 ->where('end_at','<=',$data['sp_time_e'].':00');
         }])
             ->where('group_id', '=', $data['group'])
-            ->where('style','=','一般')
+            ->where('is_booking','=','1')
             ->where('status', '=', 1);
 
         if(isset($data['device'])&&$data['device']!=''){
@@ -179,7 +179,7 @@ class BookingController extends Controller
         $timeRanges = $this->MyTimeRange($data['sp_time_s'], $data['sp_time_e'],$half);
        
    
-
+      
 
         //{{$device->BookingHistory_Mark[$date][$time['start_key']]->customer->phone.'-'.$device->BookingHistory_Mark[$date][$time['start_key']]->customer->name}}
         $ss = view('booking.searchTable', ['devices' => $devices, 'ranges' => $ranges, 'timeRanges' => $timeRanges,'half' => $half,'dayMap'=>$dayMap,'now' => $now]);
@@ -320,13 +320,13 @@ class BookingController extends Controller
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::whereIn('group_id', $ugp)
                                             ->where('status',1)
-                                            ->where('style','=','一般')
+                                            ->where('is_booking','=','1')
                                           
                                              ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::where('status',1)
-                                           ->where('style','=','一般')
+                                           ->where('is_booking','=','1')
                                            ->get();
         }
         foreach ($_devices as $key => $value) {
@@ -406,13 +406,13 @@ class BookingController extends Controller
             $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::whereIn('group_id', $ugp)
                                            ->where('status',1)
-                                           ->where('style','=','一般')
+                                           ->where('is_booking','=','1')
                                           
                                            ->get();
         } else {
             $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
             $_devices = \App\models\Device::where('status',1)
-                                        ->where('style','=','一般')
+                                        ->where('is_booking','=','1')
                                         ->get();
         }
         $devices=[];

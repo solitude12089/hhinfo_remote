@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Auth;
 use DB;
+use Log;
 class CheckLive extends Command
 {
 	/**
@@ -38,6 +39,9 @@ class CheckLive extends Command
 	 */
 	public function handle()
 	{
+
+		Log::debug(__CLASS__.__Function__.' start ');
+
         $devices = \App\models\Device::where('status',1)
                                         ->whereRaw('TIMESTAMPDIFF(MINUTE,updated_at,now())>=6')
                                         ->get();
@@ -51,6 +55,9 @@ class CheckLive extends Command
 		    $tools->push($msg);
 	
         }
+
+		Log::debug(__CLASS__.__Function__.' end ');
+
 
 	
 

@@ -125,6 +125,30 @@
                         </div>
                     </div>
 
+                    
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">預約</label>
+                        <div>
+                            <select  id="is_booking" name="is_booking" class="form-control chosen">
+                                <option value="1" {{$device->is_booking=="1"?"selected":""}}>可</option>
+                                <option value="0" {{$device->is_booking=="0"?"selected":""}}>不可</option>
+                            </select>
+
+                        </div>
+                    </div>
+
+                     
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">核心版本</label>
+                        <div>
+                            <select  id="kernel" name="kernel" class="form-control chosen">
+                                <option value="2000" {{$device->kernel=="2000"?"selected":""}}>2000</option>
+                                <option value="樹梅派" {{$device->kernel=="樹梅派"?"selected":""}}>樹梅派</option>
+                            </select>
+
+                        </div>
+                    </div>
+
                     <div class="form-group col-lg-12">
                         <label class="control-label">狀態</label>
                         <div>
@@ -194,6 +218,15 @@
         });
     });
     $('#group').trigger('change');
+    $('#style').on('change',function(){
+        var current = $('#style').val();
+        if(current=='公用'){
+            $('#is_booking').val("0").trigger("chosen:updated");
+        }
+        else{
+            $('#is_booking').val("1").trigger("chosen:updated");
+        }
+    });
 
 
 </script>
