@@ -81,7 +81,7 @@
 							</a>
 
 							<a href="{{ url ('/booking/query') }}">
-								<i class="fa fa-search fa-fw"></i>註銷預約
+								<i class="fa fa-search fa-fw"></i>預約修改
 							</a>
 
 							<a href="{{ url ('/booking/calendar') }}">
@@ -100,8 +100,11 @@
 					</a>
 					<ul class="nav nav-second-level">
 						<li>
-							<a href="{{ url ('/systemlog/control_log') }}">
+						<a href="{{ url ('/systemlog/index') }}">
 								<i class="fa fa-file-o fa-fw"></i>操作紀錄
+							</a>
+							<a href="{{ url ('/systemlog/control_log') }}">
+								<i class="fa fa-file-o fa-fw"></i>操作紀錄查詢
 							</a>
 							<a href="{{ url ('/systemlog/booking_history') }}">
 								<i class="fa fa-file-o fa-fw"></i>預約紀錄

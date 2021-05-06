@@ -507,12 +507,25 @@ class BookingController extends Controller
     {
         $data = $request->all();
 
-        $sql = 'SELECT  c.id as user_id,c.name as user,c.phone,bh.range_id,bh.start_at,bh.end_at,bh.date,bh.description,d.id as device_id ,d.family,d.name,bh.aircontrol
+        $sql = 'SELECT  c.id as user_id,
+                c.name as user,
+                c.phone,
+                bh.range_id,
+                bh.start_at,
+                bh.end_at,
+                bh.date,
+                bh.description,
+                d.id as device_id ,
+                d.family,
+                d.name,
+                bh.aircontrol
                 FROM hhinfo_remote.booking_histories as bh
                 join hhinfo_remote.devices as d
                 on bh.device_id = d.id
+                join hhinfo_remote.booking_customers as bc
+                on bh.id = bc.booking_id
                 join hhinfo_remote.customers as c
-                on bh.customer_id = c.id
+                on bc.customer_id = c.id
                 where d.group_id = ' . $data['group'] . ' and d.id = \'' . $data['device'] . '\'  and  EXTRACT(YEAR_MONTH from bh.date) = \'' . str_replace('-', '', $data['date']) . '\'
                 order by bh.date,c.id,bh.range_id';
        

@@ -100,6 +100,7 @@ Route::group(['middleware' => 'auth'], function(){
 
 	//SystemLog
 	Route::group(['prefix' => 'systemlog'], function () {
+		Route::get('/index','SystemLogController@index');
 		Route::get('/control_log','SystemLogController@control_log');
 		Route::post('/control_log','SystemLogController@control_log_search');
 		Route::get('/booking_history','SystemLogController@booking_history');

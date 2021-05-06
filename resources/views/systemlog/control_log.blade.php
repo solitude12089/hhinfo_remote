@@ -3,7 +3,7 @@
 'menu'=>1,
 'breadcrumb'=>[
 '系統管理' => '',
-'操作紀錄' => Request::url()
+'操作紀錄查詢' => Request::url()
 
 ]
 ])
@@ -59,7 +59,7 @@
 
 <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title">操作紀錄</h3>
+        <h3 class="box-title">操作紀錄查詢</h3>
     </div>
     <!-- /.box-header -->
     <div class="box-body">
@@ -161,11 +161,23 @@
     <script src="/js/moment.min.js"></script>
     <script src="/js/daterangepicker.js"></script>
     <script>
-
+        var devices = <?php echo json_encode($devices); ?>;
         var _datatable = null;
         $('.chosen').chosen({
             width:"100%",
             allow_single_deselect:true
+        });
+
+        $('#group').on('change', function(evt, params) {
+            $('#device').empty();
+            $('#device').append('<option value=""></option>');
+            if(devices[$('#group').val()] != null){
+                $.each(devices[$('#group').val()],function(k,f){
+                    $('#device').append('<option value="'+f.id+'">'+f.name+'</option>');
+                });
+            }
+            $('#device').trigger("chosen:updated");
+           
         });
 
         var date = $('#date').daterangepicker({
