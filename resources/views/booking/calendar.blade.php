@@ -246,9 +246,8 @@
     <script src="/js/fullcalendar/main.min.js"></script>
     <script src="/js/fullcalendar/locales-all.min.js"></script>
     <script src="/js/moment.min.js"></script>
-    <script src="https://unpkg.com/popper.js/dist/umd/popper.min.js"></script>
-
-    <script src="https://unpkg.com/tooltip.js/dist/umd/tooltip.min.js"></script>
+    <script src="/js/popper.min.js"></script>
+    <script src="/js/tooltip.min.js"></script>
     <script>
         var devices = <?php echo json_encode($devices); ?>;
 
@@ -336,6 +335,10 @@
                                 trigger: 'hover',
                                 container: 'body'
                             });
+                        },
+                        eventClick: function(info) {
+                            var url = '/customer/'+ info.event.extendedProps.customer_id+'/log';
+                            window.open(url, '_blank').focus();
                         }
                     });
                     calendar.render();

@@ -15,7 +15,7 @@ class Tools2000
 
             $result = "";
             $res="";
-            $fp = fsockopen($ip, 4661, $errno, $errstr,5);
+            $fp = fsockopen($ip, 4661, $errno, $errstr,1);
             $header = "Get " . $path . " HTTP/1.0\r\n";
             $header .= "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"; 
             
@@ -51,7 +51,7 @@ class Tools2000
            
         }
         catch (\Exception $e) {
-
+            Log::debug(__Function__.' httpGet fail : '.$e->getMessage());
             return [
                 'result' => false,
                 'msg' => $e->getMessage(),
@@ -171,7 +171,7 @@ class Tools2000
         $device = \App\models\Device::where('id',$device_id)->first();
         $ip = $device->ip;
         $serverip = env('SERVER_IP');
-        if($device->kernel=='2000'){
+        if($device->kernel=='漢軍'){
             $date = date('YmdHis');
             $tokenO = 'hhinfo:'.$date;
             $token = base64_encode($tokenO);
@@ -205,10 +205,11 @@ class Tools2000
 	*/
     public function setStatus($device_id,$setData){
        
+       
         $device = \App\models\Device::where('id',$device_id)->first();
         $ip = $device->ip;
         $serverip = env('SERVER_IP');
-        if($device->kernel=='2000'){
+        if($device->kernel=='漢軍'){
             $date = date('YmdHis');
             $tokenO = 'hhinfo:'.$date;
             $token = base64_encode($tokenO);
@@ -296,7 +297,7 @@ class Tools2000
         $device = \App\models\Device::where('id',$device_id)->first();
         $ip = $device->ip;
         $serverip = env('SERVER_IP');
-        if($device->kernel=='2000'){
+        if($device->kernel=='漢軍'){
             $date = date('YmdHis');
             $tokenO = 'hhinfo:'.$date;
             $token = base64_encode($tokenO);
@@ -343,7 +344,7 @@ class Tools2000
         $serverip = env('SERVER_IP');
         $device = \App\models\Device::where('id',$device_id)->first();
         $ip = $device->ip;
-        if($device->kernel=='2000'){
+        if($device->kernel=='漢軍'){
             $date = date('YmdHis',strtotime($now));
             $tokenO = 'hhinfo:'.$date;
             $token = base64_encode($tokenO);

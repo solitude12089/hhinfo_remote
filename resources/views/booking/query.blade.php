@@ -172,6 +172,7 @@
     <div class="box-header with-border">
         <h3 class="box-title">查詢結果</h3>
         <div class="box-tools pull-right">
+            <button class="btn btn-danger btn-xs"  onclick="modify()">修改</button>
             <button class="btn btn-danger btn-xs"  onclick="remove()">刪除</button>
 
         </div>
@@ -190,6 +191,10 @@
 
 <form id='remove_from' action="{{url('/booking/remove')}}" method="POST" enctype="multipart/form-data" hidden>
         <input id="remove_id" name='remove_id'>
+</form>
+
+<form id='modify_from' action="{{url('/booking/modify')}}" method="POST" enctype="multipart/form-data" hidden>
+        <input id="modify_id" name='modify_id'>
 </form>
 
 
@@ -408,7 +413,8 @@
                     if(result) {
                         $('#remove_from').empty;
                         $.each($removes,function(k,v){
-                            $('#remove_from').append(' <input id="remove_id" name="remove_id[]" value="'+$(v).val()+'">');
+                            $phone =  $($(v).parents('tr').children('td').get(2)).html();
+                            $('#remove_from').append(' <input id="remove_id" name="remove_id['+$(v).val()+'][]" value="'+$phone+'">');
                         });
                         $('#remove_from').submit();
                         
@@ -417,6 +423,59 @@
             });
 
         }
+
+        function modify(){
+           
+           $modifys = $('[name ="remove[]"]:checked');
+           if($modifys.length==0){
+               alert('請勾選修改項目');
+               return;
+           }
+           $msg = '';
+           $.each($modifys,function(k,v){
+               $device = $($(v).parents('tr').children('td').get(3)).html();
+               $user = $($(v).parents('tr').children('td').get(1)).html();
+               $phone =  $($(v).parents('tr').children('td').get(2)).html();
+               $date = $($(v).parents('tr').children('td').get(4)).html();
+               $time = $($(v).parents('tr').children('td').get(5)).html();
+               $aircontrol = $($(v).parents('tr').children('td').get(7)).html();
+               $msg =  $msg+'<div>租借人:'+$user+' - '+$phone+'</div>\
+                        <div>租借日期:'+$date+'</div>\
+                        <div>租借時間:'+$time+'</div>\
+                        <div>租借地點:'+$device+'</div>\
+                        <div>是否租借冷氣</div>\
+                        <div>\
+                            <select class="form-control" id="modify_'+k+'">\
+                                <option '+(($aircontrol=='是')?'selected="selected"':'')+'>是</option>\
+                                <option '+(($aircontrol=='否')?'selected="selected"':'')+'>否</option>\
+                            </select>\
+                        </div>\
+                        <br>';
+           });
+          
+           BootstrapDialog.confirm({
+               title: '修改確認',
+               message: $msg,
+               type: BootstrapDialog.TYPE_WARNING, // <-- Default value is BootstrapDialog.TYPE_PRIMARY
+               closable: true, // <-- Default value is false
+               draggable: true, // <-- Default value is false
+               btnCancelLabel: '取消', // <-- Default value is 'Cancel',
+               btnOKLabel: '確定', // <-- Default value is 'OK',
+               btnOKClass: 'btn-danger', // <-- If you didn't specify it, dialog type will be used,
+               callback: function(result) {
+                    console.log(result);
+                    if(result) {
+                        $('#modify_from').empty;
+                        $.each($modifys,function(k,v){
+                            $('#modify_from').append(' <input id="modify_id" name="modify_id['+$(v).val()+']" value="'+$('#modify_'+k).val()+'">');
+                        });
+                        $('#modify_from').submit();
+                        
+                    }
+               }
+           });
+
+       }
 
 
 

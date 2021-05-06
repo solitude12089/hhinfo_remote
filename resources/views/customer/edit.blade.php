@@ -8,6 +8,9 @@
         margin: 0px 10px;
         width:'400px';
    }
+    .modal-body{
+        overflow: visible !important;
+    }
 </style>
 @stop
 
@@ -67,6 +70,24 @@
 
                         </div>
                     </div>
+                    @if(Auth::user()->role == 9)
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">所屬區域</label>
+                        <div>
+                            <select id="groups" name="groups[]"  class="form-control chosen" multiple>
+                                @foreach($groups as $key => $value)
+                                    @if(in_array('@'.$value->id.'@',$customer->groups))
+                                        <option value="{{'@'.$value->id.'@'}}" selected>{{$value->name}}</option>
+                                    @else
+                                        <option value="{{'@'.$value->id.'@'}}">{{$value->name}}</option>
+                                    @endif
+                                   
+                                @endforeach
+                            </select>
+
+                        </div>
+                    </div>
+                    @endif
 
                     <div class="form-group col-lg-12">
                         <label class="control-label">狀態</label>
@@ -167,6 +188,10 @@
 
     });
 
+    $('.chosen').chosen({
+            width:"100%",
+            allow_single_deselect:true
+    });
     function remove(obj){
         $(obj).parent().remove();
     }

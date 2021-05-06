@@ -33,7 +33,7 @@ class PhoneController extends Controller {
 	}
 	
 	public function test(){
-		return view('test.index');
+		
 	}
 
 	public function registered(Request $request){
@@ -137,6 +137,7 @@ class PhoneController extends Controller {
 				$customer = \App\models\Customer::firstOrNew(['phone'=>$data['phone']]);
 				$customer->name = $data['name'];
 				$customer->phone_uuid = $uuid;
+				$customer->groups=[];
 				$customer->save();
 
 				return response()->json(
@@ -280,12 +281,18 @@ class PhoneController extends Controller {
 			}
 
 			$toDay = date('Y-m-d');
-			$bookings = \App\models\BookingHistory::with('device')
-												->where('date',$toDay)
-												->where('range_id',$nowRanges)
-												->where('status',1)
-												->where('customer_id',$customer->id)
-												->get();
+			$bookings = \App\models\BookingHistory::join('booking_customers', 'booking_histories.id', '=', 'booking_customers.booking_id')
+													->where('booking_customers.customer_id',$customer->id)
+													->where('booking_histories.date',$toDay)
+													->where('booking_histories.range_id',$nowRanges)
+													->where('booking_histories.status',1)
+													->get();
+			// $bookings = \App\models\BookingHistory::with('device')
+			// 									->where('date',$toDay)
+			// 									->where('range_id',$nowRanges)
+			// 									->where('status',1)
+			// 									->where('customer_id',$customer->id)
+			// 									->get();
 			if(count($bookings)>0){
 				foreach ($bookings as $bk => $booking){
 					$device = $booking->device;
@@ -374,13 +381,18 @@ class PhoneController extends Controller {
 			}
 
 			//過時間關鐵捲門
-			
-			$over_bookings = \App\models\BookingHistory::with('device')
-											->where('date',$toDay)
-											->where('range_id','<',$nowRanges)
-											->where('status',1)
-											->where('customer_id',$customer->id)
-											->get();
+			$over_bookings = \App\models\BookingHistory::join('booking_customers', 'booking_histories.id', '=', 'booking_customers.booking_id')
+													->where('booking_customers.customer_id',$customer->id)
+													->where('booking_histories.date',$toDay)
+													->where('booking_histories.range_id','<',$nowRanges)
+													->where('booking_histories.status',1)
+													->get();
+			// $over_bookings = \App\models\BookingHistory::with('device')
+			// 								->where('date',$toDay)
+			// 								->where('range_id','<',$nowRanges)
+			// 								->where('status',1)
+			// 								->where('customer_id',$customer->id)
+			// 								->get();
 			
 			if(count($over_bookings)>0){
 				foreach ($over_bookings as $obk => $obooking){
@@ -485,24 +497,38 @@ class PhoneController extends Controller {
 
 		
 			$toDay = date('Y-m-d');
-			$booking = \App\models\BookingHistory::where('date',$toDay)
-													->where('range_id',$nowRanges)
-													->where('status',1)
-													->where('customer_id',$customer->id)
-													->whereIn('device_id',$searchDevice)
+			$booking = \App\models\BookingHistory::join('booking_customers', 'booking_histories.id', '=', 'booking_customers.booking_id')
+													->where('booking_customers.customer_id',$customer->id)
+													->where('booking_histories.date',$toDay)
+													->where('booking_histories.range_id',$nowRanges)
+													->where('booking_histories.status',1)
+													->whereIn('booking_histories.device_id',$searchDevice)
 													->get()->count();
+			// $booking = \App\models\BookingHistory::where('date',$toDay)
+			// 										->where('range_id',$nowRanges)
+			// 										->where('status',1)
+			// 										->where('customer_id',$customer->id)
+			// 										->whereIn('device_id',$searchDevice)
+			// 										->get()->count();
 			if($booking>0){
 				$allow = true;
 			}
 			else{
 				//過時間關鐵捲門
 				if($device->type=='鐵捲門'){
-					$over_booking = \App\models\BookingHistory::where('date',$toDay)
-													->where('range_id','<=',$nowRanges)
-													->where('status',1)
-													->where('customer_id',$customer->id)
-													->whereIn('device_id',$searchDevice)
+					$over_booking = \App\models\BookingHistory::join('booking_customers', 'booking_histories.id', '=', 'booking_customers.booking_id')
+													->where('booking_customers.customer_id',$customer->id)
+													->where('booking_histories.date',$toDay)
+													->where('booking_histories.range_id','<=',$nowRanges)
+													->where('booking_histories.status',1)
+													->whereIn('booking_histories.device_id',$searchDevice)
 													->get()->count();
+					// $over_booking = \App\models\BookingHistory::where('date',$toDay)
+					// 								->where('range_id','<=',$nowRanges)
+					// 								->where('status',1)
+					// 								->where('customer_id',$customer->id)
+					// 								->whereIn('device_id',$searchDevice)
+					// 								->get()->count();
 					if($over_booking>0){
 						$allow= true;
 					}

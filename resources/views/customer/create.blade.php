@@ -5,6 +5,9 @@
     /* .modal-body{
         min-height: 300px;
     } */
+    .modal-body{
+        overflow: visible !important;
+    }
 </style>
 @stop
 
@@ -54,6 +57,20 @@
                             </div>
                         </div>
                     </div>
+
+                    @if(Auth::user()->role == 9)
+                    <div class="form-group col-lg-12">
+                        <label class="control-label">所屬區域</label>
+                        <div>
+                            <select id="groups" name="groups[]"  class="form-control chosen" multiple>
+                                @foreach($groups as $key => $value)
+                                    <option value="{{'@'.$value->id.'@'}}" selected>{{$value->name}}</option>
+                                @endforeach
+                            </select>
+
+                        </div>
+                    </div>
+                    @endif
                   
         </form>
     </div>
@@ -66,6 +83,39 @@
 
 
 <script>
+    $('.chosen').chosen({
+            width:"100%",
+            allow_single_deselect:true
+    });
+    $('#phone').focusout(function() {
+        var phone = $('#phone').val();
+        re = /^[0]{1}[0-9]{9}$/;
+        if(!re.test(phone)){
+            alert('電話格式錯誤.');
+            return;
+        }
+        var url = '/customer/checkphone';
+        $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    'phone':phone
+                },
+                success: function(result){
+                    if(result.result==0){
+                        alert(result.msg);
+                        return;
+                    }
+                    if(result.result==2){
+                        if (confirm('該電話已註冊,是否帶入編輯頁面?')) {
+                            customer_id = result.customer_id;
+                            $('#ajax-modal .modal-content').load('/customer/'+customer_id+'/edit');
+                        }
+                    }
+                   
+                }
+        });
+    });
     $('#btnSave').click(function(){
         if($('#card_uuid_input').val().length!=0){
             insert($('#card_uuid_input'));
@@ -73,6 +123,7 @@
         var phone = $('#phone').val();
         var name = $('#name').val();
         var card_uuids = [];
+        var groups = $('#groups').val();
         $.each($('[name ="card_uuid[]"]'),function(k,v){
             card_uuids.push($(v).val());
         });
@@ -90,6 +141,7 @@
             alert('電話格式錯誤.');
             return;
         }
+       
         var url = '/customer/checkcardid';
         $.ajax({
                 type: 'POST',
@@ -156,7 +208,6 @@
             $('#card_gulp').append(html);
             $('#card_uuid_input').val("");
         }
-      
     }
 
    

@@ -36,7 +36,7 @@
                      <div class="form-group col-lg-12">
                         <label class="control-label">區域</label>
                         <div>
-                            <select  id="group" name="group[]" class="form-control chosen" multiple>
+                            <select  id="group" name="group[]" class="form-control chosen">
                                 @foreach($groups as $key => $value)
                                     <option value="{{$value->id}}">{{$value->name}}</option>
                                 @endforeach

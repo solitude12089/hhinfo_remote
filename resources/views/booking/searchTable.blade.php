@@ -133,7 +133,7 @@
 				<tr class="pick-row">
 					@foreach($timeRanges as $tk =>$time)
 						@if(isset($device->BookingHistory_Mark[$date][$time['start_key']]))
-						<td class="full">
+						<td class="full idle idle-{{$device->id}}-{{$time['value']}}" date="{{$date}}" start="{{$time['start_key']}}"  end="{{$time['end_key']}}"  place="{{$device->id}}">
 							
 						</td>
 						@else

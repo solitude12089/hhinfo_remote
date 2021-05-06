@@ -29,6 +29,7 @@ class RemoteController extends Controller {
 			$device = \App\models\Device::where('ip',$data['controlip'])
 										->orWhere('local_ip',$data['controlip'])
 										->first();
+										
 			if($device===null){
 				//return 'Device Miss';
 				return response('serverip='.$serverip, 200)
@@ -85,7 +86,6 @@ class RemoteController extends Controller {
 			}
 
 			
-			
 			if($customer==null||$customer->status!=1){
 				//return 'Customer Miss';
 				return response('serverip='.$serverip, 200)
@@ -127,23 +127,28 @@ class RemoteController extends Controller {
 			}else{
 					$nowRanges = $nowRanges.':00';
 			}
-			$booking = \App\models\BookingHistory::where('date',$toDay)
-													->where('range_id',$nowRanges)
-													->where('status',1)
-													->where('customer_id',$customer->id)
-													->whereIn('device_id',$searchDevice)
+		
+			$booking = \App\models\BookingHistory::join('booking_customers', 'booking_histories.id', '=', 'booking_customers.booking_id')
+													->where('booking_customers.customer_id',$customer->id)
+													->where('booking_histories.date',$toDay)
+													->where('booking_histories.range_id',$nowRanges)
+													->where('booking_histories.status',1)
+													->whereIn('booking_histories.device_id',$searchDevice)
 													->get()->count();
+												
+												
 			if($booking>0){
 				return $this->opendoor($device,$senser1,$customer->id,$e_swipe_event->id,'租借時段');
 			}
 			else{
 				//過時間關鐵捲門
 				if($device->type=='鐵捲門'){
-					$over_booking = \App\models\BookingHistory::where('date',$toDay)
-													->where('range_id','<=',$nowRanges)
-													->where('status',1)
-													->where('customer_id',$customer->id)
-													->whereIn('device_id',$searchDevice)
+					$over_booking = \App\models\BookingHistory::join('booking_customers', 'booking_histories.id', '=', 'booking_customers.booking_id')
+													->where('booking_histories.date',$toDay)
+													->where('booking_histories.range_id','<=',$nowRanges)
+													->where('booking_histories.status',1)
+													->where('booking_customers.customer_id',$customer->id)
+													->whereIn('booking_histories.device_id',$searchDevice)
 													->get()->count();
 					if($over_booking>0){
 						SysLog::log('normal',$device->group_id,'swipe return',$customer->id,$device->id,$e_swipe_event->id,'超時關門');
@@ -186,12 +191,17 @@ class RemoteController extends Controller {
 		
 		}
 		$rt='serverip='.$serverip."&gateno=".$gateno."&opentime=".$opentime;
-		
-		if($spcard!=null && count($spcard->authority)!=0){
-			foreach($spcard->authority as $ak => $av){
-				$rt = $rt."&gateno=".$av."&opentime=255";
+		if($device->type=='鐵捲門'&&$senser==0){
+
+		}
+		else{
+			if($spcard!=null && count($spcard->authority)!=0){
+				foreach($spcard->authority as $ak => $av){
+					$rt = $rt."&gateno=".$av."&opentime=255";
+				}
 			}
 		}
+		
 
 		// $rt='serverip='.$serverip."&gateno=".$gateno."&opentime=".$opentime;
 		return response($rt, 200)

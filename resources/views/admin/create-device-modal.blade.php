@@ -131,8 +131,8 @@
                         <label class="control-label">核心版本</label>
                         <div>
                             <select  id="kernel" name="kernel" class="form-control chosen">
-                                <option value="2000">2000</option>
-                                <option value="樹梅派">樹梅派</option>
+                                <option value="漢軍">漢軍</option>
+                                <option value="PI">PI</option>
                             </select>
 
                         </div>

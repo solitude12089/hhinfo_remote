@@ -192,18 +192,6 @@ class AdminController extends Controller
         $new_group = new \App\models\Group;
         $new_group->name = $data['name'];
         $new_group->save();
-
-        if(isset($data['member'])&&count($data['member'])!=0){
-            foreach ($data['member'] as $key => $value) {
-                $new_user_group = new \App\models\UserGroup;
-                $new_user_group->user_id=$value;
-                $new_user_group->group_id=$new_group->id;
-                $new_user_group->save();
-                # code...
-            }
-        }
-
-       
        
         return redirect('admin/group')->with('alert-success', '區域建立成功.');
     }
@@ -211,8 +199,7 @@ class AdminController extends Controller
     public function getEditGroup($id){
        
         $group = \App\models\Group::with('userGroupList')->where('id',$id)->first();
-        $users = \App\User::pluck('name','id')->toArray();
-        return view('admin.edit-group-modal',['group'=>$group,'users'=>$users]);
+        return view('admin.edit-group-modal',['group'=>$group]);
     }
 
     public function postEditGroup(Request $request,$id){
@@ -241,20 +228,6 @@ class AdminController extends Controller
       
         $oldgroup->name = $data['name'];
         $oldgroup->save();
-
-        \App\models\UserGroup::where('group_id',$oldgroup->id)->delete();
-
-        if(isset($data['member'])&&count($data['member'])!=0){
-
-            foreach ($data['member'] as $key => $value) {
-                $new_user_group = new \App\models\UserGroup;
-                $new_user_group->user_id=$value;
-                $new_user_group->group_id=$oldgroup->id;
-                $new_user_group->save();
-            }
-        }
-
-       
         return redirect('admin/group')->with('alert-success', '區域修改成功.');
     }
 

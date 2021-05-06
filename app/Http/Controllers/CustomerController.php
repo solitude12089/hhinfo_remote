@@ -12,14 +12,33 @@ class CustomerController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-       
-      
+        $user = Auth::user();
+        $data = $request->all();
         $customers = \App\models\Customer::with('cardList')
-                                        ->with('last_update_user')
-                                        ->get();
-                                     
+                                            ->with('last_update_user');
+        if (Auth::user()->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $customers = $customers ->where(function ($query) use ($ugp) {
+                foreach ($ugp as $k => $v) {
+                    if($k==0){
+                        $query = $query -> where('groups','like' ,'%@'.$v.'@%');
+                    }else{
+                        $query = $query -> orWhere('groups','like' ,'%@'.$v.'@%');
+                    }
+                }
+            });
+        } 
+        if(isset($data['show_disable'])&&$data['show_disable']==1){
+        }
+        else{
+            $customers = $customers->where('status',1);
+        }
+        $customers = $customers->get();
+      
+       
+                                      
         return view('customer.index',['customers' => $customers]);
         //
     }
@@ -31,8 +50,18 @@ class CustomerController extends Controller
      */
     public function create()
     {
-
-        return view('customer.create');
+        $user = Auth::user();
+        if (Auth::user()->role != 9) {
+            $ugp = \App\models\Group::join('user_groups','user_groups.group_id','groups.id')
+                                        ->where('user_groups.user_id',$user->id)
+                                        ->select('groups.*')
+                                        ->get();
+        }
+        else{
+            $ugp = \App\models\Group::all();
+        }
+       
+        return view('customer.create', ['groups' => $ugp]);
         //
     }
 
@@ -47,12 +76,29 @@ class CustomerController extends Controller
         try{
             $user = Auth::user();
             $data = $request->all();
+            
             if(!isset($data['phone'])||$data['phone']==''){
                 throw new \Exception('電話不可為空.');
             }
             if(!isset($data['name'])||$data['name']==''){
                 throw new \Exception('名稱不可為空.');
             }
+
+            if($user->role == 9){
+                if(!isset($data['groups'])||count($data['groups'])==0){
+                    throw new \Exception('所屬區域不可為空.');
+                }
+                $group = $data['groups'];
+            }else{
+                $_group = $user->userGroupList->pluck('group_id')->toArray();
+                if(count($_group)!=0){
+                    $group[] = '@'.$_group[0].'@';
+                }else{
+                    throw new \Exception('建立失敗,請洽管理員.');
+                }
+                
+            }
+           
             $customer = \App\models\Customer::where('phone',$data['phone'])->first();
             if($customer!=null){
                 throw new \Exception('電話重複,無法建立.');
@@ -63,6 +109,7 @@ class CustomerController extends Controller
             $new_customer->name = $data['name'];
             $new_customer->user_id = $user->id;
             $new_customer->created_id =$user->id;
+            $new_customer->groups = $group;
             $new_customer->save();
             
 
@@ -92,8 +139,18 @@ class CustomerController extends Controller
      */
     public function edit($id)
     {
+        $user = Auth::user();
         $customer = \App\models\Customer::with('cardList')->where('id',$id)->first();
-        return view('customer.edit',['customer'=>$customer]);
+        if (Auth::user()->role != 9) {
+            $ugp = \App\models\Group::join('user_groups','user_groups.group_id','groups.id')
+                                        ->where('user_groups.user_id',$user->id)
+                                        ->select('groups.*')
+                                        ->get();
+        }
+        else{
+            $ugp = \App\models\Group::all();
+        }
+        return view('customer.edit',['customer'=>$customer,'groups'=>$ugp]);
     }
 
     /**
@@ -115,6 +172,20 @@ class CustomerController extends Controller
               return redirect('/customer/index')->with('alert-danger', '名稱不可為空.');
         }
 
+        if($user->role == 9){
+            if(!isset($data['groups'])||count($data['groups'])==0){
+                throw new \Exception('所屬區域不可為空.');
+            }
+            $group = $data['groups'];
+        }else{
+            $_group = $user->userGroupList->pluck('group_id')->toArray();
+            if(count($_group)!=0){
+                $group[] = '@'.$_group[0].'@';
+            }else{
+                throw new \Exception('建立失敗,請洽管理員.');
+            }
+        }
+
      
      
 
@@ -130,6 +201,8 @@ class CustomerController extends Controller
         $old_customer->phone = $data['phone'];
         $old_customer->name = $data['name'];
         $old_customer->status = $data['status'];
+        $old_customer->groups = array_unique (array_merge ($old_customer->groups, $group));
+
 
         $old_card_remove = \App\models\Card::where('customer_id',$id)->delete();
         if(isset($data['card_uuid'])&&count($data['card_uuid'])!=0){
@@ -146,6 +219,35 @@ class CustomerController extends Controller
     
     }
 
+
+    public function checkphone(Request $request){
+        try{
+            $data = $request->all();
+            if(!isset($data['phone'])||$data['phone']==''){
+                throw new \Exception('電話不可為空');
+            }
+            $old_customer = \App\models\Customer::where('phone',$data['phone'])->first();
+            if($old_customer!==null){
+                return response()->json([
+                    'result' => 2,
+                    'customer_id' => $old_customer->id
+                ],200);
+            }
+            else{
+                return response()->json([
+                    'result' => 1
+                ],200);
+            }
+        }
+        catch(\Exception $e){
+            return response()->json([
+                'result' => 0,
+                'msg' => $e->getMessage()
+            ],200);
+        }
+      
+        
+    }
 
     public function checkcardid(Request $request){
 
@@ -209,10 +311,30 @@ class CustomerController extends Controller
     
 
     public function list(Request $request){
+        $user =Auth::user();
         $data = $request->all();
-        $customers = \App\models\Customer::where('phone','like',$data['search'].'%')
-                                        ->orWhere('name','like','%'.$data['search'].'%')
-                                        ->get();
+        // $customers = \App\models\Customer::where('phone','like',$data['search'].'%')
+        //                                 ->orWhere('name','like','%'.$data['search'].'%');
+        $customers = \App\models\Customer::where(function ($query) use($data){
+            $query = $query ->where('phone','like',$data['search'].'%')
+                            ->orWhere('name','like','%'.$data['search'].'%');
+        });
+        
+        if ($user->role != 9) {
+            $ugp = $user->userGroupList->pluck('group_id')->toArray();
+            $customers = $customers ->where(function ($query) use ($ugp) {
+                foreach ($ugp as $k => $v) {
+                    if($k==0){
+                        $query = $query -> where('groups','like' ,'%@'.$v.'@%');
+                    }else{
+                        $query = $query -> orWhere('groups','like' ,'%@'.$v.'@%');
+                    }
+                }
+            });
+        }
+        $customers = $customers ->get();
+
+
         $rt = [];
         foreach ($customers as $customer){
             $rt[$customer->id] = $customer->phone.' - '.$customer->name;
@@ -341,6 +463,83 @@ class CustomerController extends Controller
         }
         $old_spcard->delete();
         return redirect('/customer/spcard')->with('alert-success', '刪除成功.');
+    }
+
+
+    public function customerLog($customer_id){
+        $customer = \App\models\Customer::with('bookingCustomer')
+                                        ->with('bookingCustomer.bookingHistory')
+                                        ->with('bookingCustomer.bookingHistory.device')
+                                        ->where('id',$customer_id)
+                                        ->first();
+        $rt_data = [];
+        foreach ($customer->bookingCustomer as $key => $bookingCustomer){
+            if(isset($bookingCustomer->bookingHistory)&&$bookingCustomer->bookingHistory!=null){
+                $value = $bookingCustomer->bookingHistory;
+                if(isset($rt_data[$value->date][$value->device_id][$value->customer_id][$value->aircontrol])&&
+                    count($rt_data[$value->date][$value->device_id][$value->customer_id][$value->aircontrol])!=0){
+                        $in_group = 0;
+                        
+                        foreach ($rt_data[$value->date][$value->device_id][$value->customer_id][$value->aircontrol] as $_tk => $_t){
+                            if($_t['end_at']>=$value->start_at){
+                                $rt_data[$value->date][$value->device_id][$value->customer_id][$value->aircontrol][$_tk]['end_at'] = $value->end_at;
+                                $rt_data[$value->date][$value->device_id][$value->customer_id][$value->aircontrol][$_tk]['in_range'][] =  $value->id;
+                                $in_group = 1 ;
+                            }
+                        }
+                        if($in_group==0){
+                            $rt_data[$value->date][$value->device_id][$value->customer_id][$value->aircontrol][$value->range_id]=[
+                                'username' => $customer->name,
+                                'phone' => $customer->phone,
+                                'family' => $value->device->family,
+                                'device_name' => $value->device->name,
+                                'description' => $value->description,
+                                'start_at' => $value->start_at,
+                                'end_at' => $value->end_at,
+                                'in_range' => [
+                                    $value->id
+                                ]
+                            ];
+                        }
+                }
+                else{
+                    $rt_data[$value->date][$value->device_id][$value->customer_id][$value->aircontrol][$value->range_id]=[
+                        'username' => $customer->name,
+                        'phone' => $customer->phone,
+                        'family' => $value->device->family,
+                        'device_name' => $value->device->name,
+                        'description' => $value->description,
+                        'start_at' => $value->start_at,
+                        'end_at' => $value->end_at,
+                        'in_range' => [
+                            $value->id
+                        ]
+                    ];
+                }
+            }
+        }
+        $rrt_data = [];
+        foreach($rt_data as $r_date => $r_value){
+            foreach($r_value as $f_device_id => $f_value){
+                foreach($f_value as $v_customer_id => $v_value){
+                    foreach($v_value as $t_aircontrol => $t_value){
+                        foreach($t_value as $g_range_id => $g_data){
+                            $rrt_data[]=[
+                                $g_data['username'],
+                                $g_data['phone'],
+                                $g_data['family'].'-'.$g_data['device_name'],
+                                $r_date,
+                                $g_data['start_at'].' ~ '.$g_data['end_at'],
+                                $g_data['description'],
+                                $t_aircontrol==0?'否':'是',
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+       
+        return view('customer.log',['customer' =>$customer , 'rt_data' => $rrt_data]);
     }
 
 

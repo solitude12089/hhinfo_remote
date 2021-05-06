@@ -14,6 +14,7 @@
 @parent
     <link href="/css/datatables.min.css" rel="stylesheet">
     <link href="/css/bootstrap-dialog.min.css" rel="stylesheet">
+    <link href="/css/chosen/chosen.min.css" rel="stylesheet">
 @stop
 
 
@@ -26,6 +27,7 @@
     <div class="box-header with-border">
         <h3 class="box-title">客戶列表</h3>
         <div class="box-tools pull-right">
+            <a class="btn btn-warning btn-xs" href="/customer/index?show_disable=1">顯示關閉客戶</a>
             <a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#ajax-modal" href="/customer/create">新增客戶</a>
 
         </div>
@@ -107,6 +109,7 @@
 
 
 @section('script')
+    <script src="/js/chosen/chosen.jquery.min.js"></script>
     <script src="/js/datatables.min.js"></script>
     <script src="/js/bootstrap-dialog.min.js"></script>
     <script>

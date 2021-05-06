@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use Auth;
 use Illuminate\Http\Request;
 use DB;
+use DateTime;
+use DateInterval;
 class SystemLogController extends Controller
 {
     /**
@@ -11,25 +13,72 @@ class SystemLogController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function control_log()
     {
         $user = Auth::user();
-
-        $systemlog = \App\models\SystemLog::with('user')
-                                        ->with('customer')
-                                        ->with('device')
-                                        ->where('type','normal');
-                                        
-
+        $_devices =[];
+        $groups = [];
+        $devices = [];
         if (Auth::user()->role != 9) {
             $ugp = $user->userGroupList->pluck('group_id')->toArray();
-            $systemlog = $systemlog->whereIn('group_id', $ugp);
+            $groups = \App\models\Group::whereIn('id', $ugp)->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::whereIn('group_id', $ugp)
+                                            ->where('status',1)
+                                            ->get();
+        } else {
+            $groups = \App\models\Group::all()->pluck('name', 'id')->toArray();
+            $_devices = \App\models\Device::where('status',1)
+                                           ->get();
         }
-            
-        $systemlog = $systemlog->take(1000)
-                                ->orderBy('created_at','DESC')
-                                ->get();
+        foreach ($_devices as $key => $value) {
+            $devices[$value->group_id][] = $value;
+        }
 
+        return view('systemlog.control_log', ['groups' => $groups, 'devices' => $devices]);
+  
+
+      
+    }
+
+    public function control_log_search(Request $request){
+        $data = $request->all();
+        $ds = new DateTime( $data['startDate']);
+        $startDate =  $ds->format('Y-m-d H:i:s');
+        $de = new DateTime( $data['endDate']);
+        $endDate = $de->add(new DateInterval('P1D'))->format('Y-m-d H:i:s');
+     
+        $data['group'] = 5;
+
+        $systemlog = \App\models\SystemLog::where('type','normal')
+                                        ->where('group_id',$data['group'])
+                                        ->where('created_at','<',$endDate)
+                                        ->where('created_at','>=',$startDate);
+
+                                    
+        if(isset($data['log_type'])&&count($data['log_type'])!=0){
+            $_function_name = [];
+            foreach ($data['log_type'] as $key => $value){
+                switch($value){
+                    case 'swipe_event':
+                        $_function_name[] = 'swipe card';
+                        $_function_name[] = 'swipe event';
+                        $_function_name[] = 'swipe return';
+                    break;
+                    case 'device_control':
+                        $_function_name[] = 'device control';
+                    break;
+                    case 'phone_control':
+                        $_function_name[] = 'phone control';
+                    break;
+                }
+            }
+
+            $systemlog = $systemlog->whereIn('function_name',$_function_name);
+        }
+        $systemlog = $systemlog ->orderBy('created_at','DESC')
+                                ->get();
+                       
+       
         $rt_data = [];
         $temp_queue = [];
         foreach ($systemlog as $key => $value){
@@ -38,7 +87,6 @@ class SystemLogController extends Controller
                     $act = json_decode($value->col2);
                     $msg = '';
                     foreach ($act as $k => $v){
-                       
                         if(strlen($msg)!=0){
                             $msg .= ',';
                         }
@@ -67,14 +115,6 @@ class SystemLogController extends Controller
                             break;
                         }
                     }
-                   
-                    // $rt_data[] = [
-                    //     'date' => $value->created_at,
-                    //     'user' => $value->user_id==0?'系統':$value->user->name,
-                    //     'action' => '遠端操作',
-                    //     'target' => $value->device->family.'-'.$value->device->name,
-                    //     'msg' => $msg
-                    // ];
                     $rt_data[] = [
                         $value->created_at->format('Y-m-d H:i:s'),
                         $value->user_id==0?'系統':$value->user->name,
@@ -84,46 +124,20 @@ class SystemLogController extends Controller
                     ];
                     break;
                 case 'swipe card':
-                    // $rt_data[] = [
-                    //     'date' => $value->created_at,
-                    //     'user' => $value->customer==null?'':$value->customer->name,
-                    //     'action' => '有效刷卡',
-                    //     'target' => $value->device->family.'-'.$value->device->name,
-                    //     'msg' => '刷卡'
-                    // ];
-
-
                     if($value->col2!==null){
                         $temp_queue[$value->col2]['action'][] = '有效刷卡';
                         $temp_queue[$value->col2]['msg'][] = '合法卡';
                         $temp_queue[$value->col2]['user'] = $value->customer==null?'':$value->customer->name;
                     }
-                 
                     break;
                 case 'swipe return':
-                    // $rt_data[] = [
-                    //     'date' => $value->created_at,
-                    //     'user' => $value->customer==null?'':$value->customer->name,
-                    //     'action' => '刷卡回應',
-                    //     'target' => $value->device->family.'-'.$value->device->name,
-                    //     'msg' => $value->col3
-                    // ];
                     if($value->col2!==null){
                         $temp_queue[$value->col2]['action'][] = '刷卡回應';
                         $temp_queue[$value->col2]['msg'][] = $value->col3;
                         $temp_queue[$value->col2]['user'] = $value->customer==null?'':$value->customer->name;
                     }
-                   
                     break;
                 case 'swipe event':
-                    // $rt_data[] = [
-                    //     'date' => $value->created_at,
-                    //     'user' => '',
-                    //     'action' => '刷卡事件',
-                    //     'target' => $value->device->family.'-'.$value->device->name,
-                    //     'msg' => $value->col2
-                    // ];
-
                     $temp_queue[$value->id]['date'] = $value->created_at->format('Y-m-d H:i:s');
                     $temp_queue[$value->id]['action'][] = '刷卡事件';
                     $temp_queue[$value->id]['target'] = $value->device->family.'-'.$value->device->name;
@@ -133,7 +147,6 @@ class SystemLogController extends Controller
                     }
                 break;
                 case 'phone control':
-
                     $rt_data[] = [
                         $value->created_at->format('Y-m-d H:i:s'),
                         $value->customer==null?'':$value->customer->name,
@@ -146,13 +159,6 @@ class SystemLogController extends Controller
         }
 
         foreach($temp_queue as $tk => $tv){
-            // $rt_data[] = [
-                    //     'date' => $value->created_at,
-                    //     'user' => $value->customer==null?'':$value->customer->name,
-                    //     'action' => '刷卡回應',
-                    //     'target' => $value->device->family.'-'.$value->device->name,
-                    //     'msg' => $value->col3
-                    // ];
             $action='';
             $msg = '';
             foreach($tv['action'] as $tvak => $tvav){
@@ -165,17 +171,14 @@ class SystemLogController extends Controller
                 $tv['date'] = '';
             }
             $rt_data[] = [
-                $tv['date'],
-                $tv['user'],
-                $tv['target'],
+                isset($tv['date']) ? $tv['date'] :'',
+                isset($tv['user']) ? $tv['user'] :'',
+                isset($tv['target']) ? $tv['target'] :'',
                 $action,
                 $msg
             ];
         }
-     
-        return view('systemlog.index',['rt_data' => $rt_data]);
-
-      
+        return response()->json($rt_data, 200);
     }
 
     public function booking_history(){

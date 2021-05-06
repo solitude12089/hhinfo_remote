@@ -100,7 +100,7 @@
 					</a>
 					<ul class="nav nav-second-level">
 						<li>
-							<a href="{{ url ('/systemlog/index') }}">
+							<a href="{{ url ('/systemlog/control_log') }}">
 								<i class="fa fa-file-o fa-fw"></i>操作紀錄
 							</a>
 							<a href="{{ url ('/systemlog/booking_history') }}">
@@ -109,9 +109,11 @@
 							<a href="{{ url ('/systemlog/remove_history') }}">
 								<i class="fa fa-file-o fa-fw"></i>註銷紀錄
 							</a>
+							@if(0)
 							<a href="{{ url ('/systemlog/air_log') }}">
 								<i class="fa fa-file-o fa-fw"></i>冷氣電閘紀錄
 							</a>
+							@endif
 						</li>
 					</ul>
 

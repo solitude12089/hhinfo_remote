@@ -28,9 +28,17 @@
             chosen.find('.search-field input, .chosen-search input').keyup(function () {
                 var old_search_term = $(this).attr("data-search");
                 var search_term = $(this).val();
-                if (!search_term || old_search_term == search_term
-                        || (options.hasOwnProperty('ajax_min_chars') && search_term.length < options.ajax_min_chars))
+                var reg = /^[\u4E00-\u9FA5]+$/;
+               
+                
+                if (!search_term || old_search_term == search_term){
                     return true;
+                }
+                if (!reg.test(search_term)){
+                    if((options.hasOwnProperty('ajax_min_chars') && search_term.length < options.ajax_min_chars)){
+                        return true;
+                    }
+                }
                 $(this).attr("data-search", search_term);
 
                 var val = select.val();
@@ -56,13 +64,22 @@
                     success: function (data) {
                         if (data.length == 0)
                             return true;
+
+                        var selected = select.val();
+                        var myMap = new Map();
+                        $.each(select[0].options, function (sk,sv){
+                            if($.inArray($(sv).val(),selected)>-1){
+                                myMap.set($(sv).val(),$(sv).html());
+                            }
+                        });
                         // Clear options
                         select.empty();
                         chosen.find('ul.chosen-results').html('');
                         // Set new options
-                       
+                        for (var [mk, mv] of myMap) {
+                            select.append('<option selected value="' +mk + '">' + mv + '</option>');
+                        }
                         $.each(data, function (i, item) {
-                            console.log(item);
                             select.append('<option value="' +i + '">' + item + '</option>');
                         });
                         select.val(val);

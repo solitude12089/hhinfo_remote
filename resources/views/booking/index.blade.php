@@ -61,7 +61,7 @@
 
 
         .idle-select{
-            background-color: green;
+            background-color: green !important;
         }
 
         .modal-content{
@@ -246,7 +246,7 @@
                 <div class="form-group col-lg-12">
                         <label class="control-label">租借人</label>
                         <div>
-                            <select  id="customer" name="customer" class="form-control chosen-select">
+                            <select  id="customer" name="customer[]" class="form-control chosen-select" multiple>
                                 <option value=""></option>
                             </select>
 
@@ -503,9 +503,13 @@
             }
             
             var eventList = groupByRanges(t);
-
-            var msg = '<div>租借人 : <label>'+$("#customer option:selected" ).text()+'<label></div>\
-                    <div>是否租用冷氣 : <label>'+$("#aircontrol option:selected" ).text()+'<label></div>\
+            var select_customer = $("#customer option:selected" );
+            var msg = '<div>租借人 :';
+            $.each(select_customer,function(k,v){
+                _msg = '<label>'+$(v).text()+'</label>';
+                msg = msg+'<div>'+_msg+'</div>';
+            });
+            msg = msg+'<div>是否租用冷氣 : <label>'+$("#aircontrol option:selected" ).text()+'<label></div>\
                     <div>預約時段 : </div><div>';
             $.each(eventList,function(k,v){
                 msg = msg +'<div><label>'+ deviceMap[v.device].family+'-'+deviceMap[v.device].name +' , ' + v.date + ' : ' + timeRanges[v.start].start + ' ~ '+  timeRanges[v.end].end + '</label></div>';

@@ -208,7 +208,7 @@ class BookingController extends Controller
     public function postBooking(Request $request)
     {
         $data = $request->all();
-     
+        $ddd = implode(',',$data['customer']);
         $user = Auth::user();
 
         if (!isset($data['customer']) || $data['customer'] == '') {
@@ -228,14 +228,14 @@ class BookingController extends Controller
             $success_bh=[];
             foreach ($data['booking'] as $device_id => $arr) {
                 foreach ($arr as $date => $arr2) {
-                    $checkDuplicate = $this->checkDuplicate($device_id,$date,$arr2);
-                    if($checkDuplicate!=null){
-                        $msg = '預約時段重複.</br>';
-                        foreach ($checkDuplicate as $kk =>$v){
-                            $msg = $msg.$v->device->family.'-'.$v->device->name.' , '.$v->date.' '.$v->start_at.'~'.$v->end_at.'</br>';
-                        }
-                        throw new \Exception($msg);
-                    }
+                    // $checkDuplicate = $this->checkDuplicate($device_id,$date,$arr2);
+                    // if($checkDuplicate!=null){
+                    //     $msg = '預約時段重複.</br>';
+                    //     foreach ($checkDuplicate as $kk =>$v){
+                    //         $msg = $msg.$v->device->family.'-'.$v->device->name.' , '.$v->date.' '.$v->start_at.'~'.$v->end_at.'</br>';
+                    //     }
+                    //     throw new \Exception($msg);
+                    // }
                     foreach ($arr2 as $key => $range_id) {
                         $time = new DateTime($range_id);
                         $time->add(new DateInterval('PT30M'));
@@ -247,26 +247,35 @@ class BookingController extends Controller
                         }
                     
 
-                        $bh = new \App\models\BookingHistory;
-                        $bh->device_id = $device_id;
-                        $bh->date = $date;
-                        $bh->customer_id = $data['customer'];
-                        $bh->range_id = $range_id;
+                        $bh = \App\models\BookingHistory::firstOrNew([
+                            'device_id' => $device_id,
+                            'date' => $date,
+                            'range_id' => $range_id
+                        ]);
+                       
+                        $bh->customer_id = 0;
                         $bh->start_at = $range_id;
                         $bh->end_at = $endtime;
                         $bh->aircontrol = $data['aircontrol'];
                         $bh->user_id = $user->id;
                         $bh->description = $data['note'];
                         $bh->save();
+
+                        foreach ( $data['customer'] as $c_key => $c_value){
+                            $bhc = \App\models\BookingCustomer::firstOrNew([
+                                'booking_id' => $bh->id,
+                                'customer_id' => $c_value
+                            ]);
+                            $bhc->save();
+                        }
+
                         $success_bh[]=$bh;
-
-
                         $syslog =  new \App\models\SystemLog;
                         $syslog->type = 'booking';
                         $syslog->function_name = 'booking';
                         $syslog->user_id = $user->id;
                         $syslog->col1 = $device_id;
-                        $syslog->col2 = $data['customer'];
+                        $syslog->col2 = implode(',',$data['customer']);
                         $syslog->col3 = $date;
                         $syslog->col4 = $range_id;
                         $syslog->col5 = $data['aircontrol'];
@@ -313,6 +322,7 @@ class BookingController extends Controller
 
     public function getQuery()
     {
+        
         $user = Auth::user();
         $devices=[];
         if (Auth::user()->role != 9) {
@@ -341,6 +351,13 @@ class BookingController extends Controller
         return view('booking.query', ['groups' => $groups, 'devices' => $devices]);
     }
 
+    public function timeSub30($_time) {
+        $time = new DateTime($_time);
+        $time->modify('-30 minutes');
+        $stamp = $time->format('H:i');
+        return $stamp;
+    }
+
     public function postQuery(Request $request)
     {
         $data = $request->all();
@@ -350,7 +367,7 @@ class BookingController extends Controller
             $whereRaw = $whereRaw. ' and d.id = ' . $data['device'];
         }
         if($data['customer']!=''){
-            $whereRaw = $whereRaw. ' and c.id = \'' .$data['customer'].'\'';
+            $whereRaw = $whereRaw. ' and bc.customer_id = \'' .$data['customer'].'\'';
         }
         if($data['note']!=''){
             $whereRaw = $whereRaw. ' and bh.description like \'%' .$data['note'].'%\'';
@@ -362,39 +379,101 @@ class BookingController extends Controller
         $sql = 'SELECT  bh.id as bh_id,
                         c.id as user_id,
                         c.name as user,
-                        c.phone,bh.range_id,
+                        c.phone,
+                        bh.range_id,
                         CONCAT(bh.start_at," ~ ",bh.end_at) as tr_description,
                         bh.date,
                         bh.description,
                         d.id as device_id,
                         d.family,d.name,
-                        bh.aircontrol
+                        bh.aircontrol,
+                        bh.start_at,
+                        bh.end_at
                 FROM hhinfo_remote.booking_histories as bh
                 join hhinfo_remote.devices as d
                 on bh.device_id = d.id
+                join hhinfo_remote.booking_customers as bc
+                on bh.id = bc.booking_id
                 join hhinfo_remote.customers as c
-                on bh.customer_id = c.id';
+                on bc.customer_id = c.id';
+                
         $sql = $sql.$whereRaw.' order by bh.date,c.id,bh.range_id';
         $query = DB::select(DB::raw($sql));
-       // dd($sql,$query);
         $rt_data = [];
+       
         foreach ($query as $key => $value){
-            $ckbok = '<input type=checkbox name="remove[]" value="'.$value->bh_id.'"></input>';
-            // $action = '<button class="btn btn-danger btn-xs" target_id="'.$value->bh_id.'" onclick="remove(this)">刪除</button>';
-            $rt_data[]=[
-                $ckbok,
-                $value->user,
-                $value->phone,
-                $value->family.'-'.$value->name,
-                $value->date,
-                $value->tr_description,
-                $value->description,
-                $value->aircontrol==0?'否':'是',
-            ];
+            if(isset($rt_data[$value->date][$value->device_id][$value->user_id][$value->aircontrol])&&
+                count($rt_data[$value->date][$value->device_id][$value->user_id][$value->aircontrol])!=0){
+                    $in_group = 0;
+                   
+                    foreach ($rt_data[$value->date][$value->device_id][$value->user_id][$value->aircontrol] as $_tk => $_t){
+                        if($_t['end_at']>=$value->start_at){
+                            $rt_data[$value->date][$value->device_id][$value->user_id][$value->aircontrol][$_tk]['end_at'] = $value->end_at;
+                            $rt_data[$value->date][$value->device_id][$value->user_id][$value->aircontrol][$_tk]['in_range'][] =  $value->bh_id;
+                            $in_group = 1 ;
+                        }
+                    }
+                    if($in_group==0){
+                        $rt_data[$value->date][$value->device_id][$value->user_id][$value->aircontrol][$value->range_id]=[
+                            'username' => $value->user,
+                            'phone' => $value->phone,
+                            'family' => $value->family,
+                            'tr_description' => $value->tr_description,
+                            'device_name' => $value->name,
+                            'description' => $value->description,
+                            'start_at' => $value->start_at,
+                            'end_at' => $value->end_at,
+                            'in_range' => [
+                                $value->bh_id
+                            ]
+                        ];
+                    }
+            }
+            else{
+                $rt_data[$value->date][$value->device_id][$value->user_id][$value->aircontrol][$value->range_id]=[
+                    'username' => $value->user,
+                    'phone' => $value->phone,
+                    'family' => $value->family,
+                    'tr_description' => $value->tr_description,
+                    'device_name' => $value->name,
+                    'description' => $value->description,
+                    'start_at' => $value->start_at,
+                    'end_at' => $value->end_at,
+                    'in_range' => [
+                        $value->bh_id
+                    ]
+                ];
+            }
         }
-     
+        $rrt_data = [];
+        foreach($rt_data as $r_date => $r_value){
+            foreach($r_value as $f_device_id => $f_value){
+                foreach($f_value as $v_customer_id => $v_value){
+                    foreach($v_value as $t_aircontrol => $t_value){
+                        foreach($t_value as $g_range_id => $g_data){
+                            $in_id = implode('@',$g_data['in_range']);
+                            $ckbok = '<input type=checkbox name="remove[]" value="'.$in_id.'"></input>';
+                            // $action = '<button class="btn btn-danger btn-xs" target_id="'.$value->bh_id.'" onclick="remove(this)">刪除</button>';
+                            $rrt_data[]=[
+                                $ckbok,
+                                $g_data['username'],
+                                $g_data['phone'],
+                                $g_data['family'].'-'.$g_data['device_name'],
+                                $r_date,
+                                $g_data['start_at'].' ~ '.$g_data['end_at'],
+                                $g_data['description'],
+                                $t_aircontrol==0?'否':'是',
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+
+       
     
-        return response()->json($rt_data, 200);
+        return response()->json($rrt_data, 200);
 
     }
 
@@ -458,6 +537,7 @@ class BookingController extends Controller
                             else{
                                 $event['title'] = $vvv->user;
                             }
+                            $event['customer_id'] = $k_user;
                             $event['note'] = $vvv->description;
                             $event['start'] = $k_date . ' ' . $vvv->start_at;
                         }
@@ -475,6 +555,7 @@ class BookingController extends Controller
                                 $event['title'] = $vvv->user;
 
                             }
+                            $event['customer_id'] = $k_user;
                             $event['note'] = $vvv->description;
                             $event['start'] = $k_date . ' ' . $vvv->start_at;
                             $event['end'] = $k_date . ' ' . $vvv->end_at;
@@ -564,27 +645,78 @@ class BookingController extends Controller
         try{
             $user = Auth::user();
             $data =$request->all();
-            
-           
             if(!isset($data['remove_id'])||count($data['remove_id'])==0){
                 throw new \Exception('刪除失敗,請點選資料');
             }
             DB::beginTransaction();
-            $bhs = \App\models\BookingHistory::whereIn('id',$data['remove_id'])->get();
-            foreach ($bhs as $key => $bh){
-                $syslog =  new \App\models\SystemLog;
-                $syslog->type = 'booking';
-                $syslog->function_name = 'remove';
-                $syslog->user_id = $user->id;
-                $syslog->col1 = $bh->device_id;
-                $syslog->col2 = $bh->customer_id;
-                $syslog->col3 = $bh->date;
-                $syslog->col4 = $bh->range_id;
-                $syslog->save();
-                $bh->delete();
+            foreach($data['remove_id'] as  $bh_ids => $value){
+                $ids = explode('@',$bh_ids);
+                $bhs = \App\models\BookingHistory::with('booking_customers')
+                                                ->with('booking_customers.customer')
+                                                ->whereIn('id',$ids)->get();
+                
+                foreach ($bhs as $key => $bh){
+                    // dd($bh,$value);
+                    foreach($bh->booking_customers as $bck => $booking_customer){
+                        if($booking_customer->customer!=null &&  in_array($booking_customer->customer->phone,$value)){
+                            $booking_customer->delete();
+                            unset($bh->booking_customers[$bck]);
+                            $syslog =  new \App\models\SystemLog;
+                            $syslog->type = 'booking';
+                            $syslog->function_name = 'remove';
+                            $syslog->user_id = $user->id;
+                            $syslog->col1 = $bh->device_id;
+                            $syslog->col2 = $booking_customer->customer_id;
+                            $syslog->col3 = $bh->date;
+                            $syslog->col4 = $bh->range_id;
+                            $syslog->save();
+                        }
+                    }
+                    if(count($bh->booking_customers)==0){
+                        var_dump('remove bh');
+                        $bh->delete();
+                    }
+                }
             }
+           
             DB::commit();
             return redirect('booking/query')->with('alert-success', '刪除成功');
+        }
+        catch(\Exception $e){
+            DB::rollback();
+            return redirect('booking/query')->with('alert-danger',$e->getMessage());
+        }
+       
+    }
+
+    public function modify(Request $request){
+        try{
+            $user = Auth::user();
+            $data =$request->all();
+            if(!isset($data['modify_id'])||count($data['modify_id'])==0){
+                throw new \Exception('修改失敗,請點選資料');
+            }
+            DB::beginTransaction();
+            
+            foreach($data['modify_id'] as  $key => $value){
+                $ids = explode('@',$key);
+                $bhs = \App\models\BookingHistory::whereIn('id',$ids)->get();
+                foreach ($bhs as $key => $bh){
+                    $syslog =  new \App\models\SystemLog;
+                    $syslog->type = 'booking';
+                    $syslog->function_name = 'modify';
+                    $syslog->user_id = $user->id;
+                    $syslog->col1 = $bh->device_id;
+                    $syslog->col2 = $bh->customer_id;
+                    $syslog->col3 = $bh->date;
+                    $syslog->col4 = $bh->range_id;
+                    $syslog->save();
+                    $bh->aircontrol=$value=="是"?"1":"0";
+                    $bh->save();
+                }
+            }
+            DB::commit();
+            return redirect('booking/query')->with('alert-success', '修改成功');
         }
         catch(\Exception $e){
             DB::rollback();

@@ -20,4 +20,9 @@ class BookingHistory extends Model
     {
         return $this->hasOne('\App\models\Device', 'id', 'device_id');
     }
+
+    public function booking_customers()
+    {
+        return $this->hasMany('\App\models\BookingCustomer', 'booking_id', 'id');
+    }
 }

@@ -22,6 +22,7 @@ class CreateCustomersTable extends Migration
             $table->integer('status')->default(1);
             $table->integer('user_id')->nullable();
             $table->integer('created_id')->nullable();
+            $table->text('groups')->nullable();
             $table->timestamps();
         });
     }
