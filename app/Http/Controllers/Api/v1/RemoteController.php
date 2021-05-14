@@ -91,6 +91,7 @@ class RemoteController extends Controller {
 				return response('serverip='.$serverip, 200)
 					->header('Content-Type', 'text/plain');
 			}
+			
 
 			$e_swipe_card = SysLog::log('normal',$device->group_id,'swipe card',$customer->id,$device->id,$e_swipe_event->id);
 			
@@ -136,7 +137,7 @@ class RemoteController extends Controller {
 													->whereIn('booking_histories.device_id',$searchDevice)
 													->get()->count();
 												
-												
+								
 			if($booking>0){
 				return $this->opendoor($device,$senser1,$customer->id,$e_swipe_event->id,'租借時段');
 			}

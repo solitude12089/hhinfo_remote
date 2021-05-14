@@ -191,22 +191,22 @@
                         return rtsv;
                     } 
                 }
-                // ,
-                // {   title: "電閘狀態",
-                //     className: "my_col",
-                //     data: function(k,v){
-                //         rtsv = '';
-                //         if(k.s2 =="0"){
-                //             rtsv = '<button class="btn btn-xs btn-danger" " target_id="'+k.id+'" relay="4">關</button>';
+                ,
+                {   title: "冷氣狀態",
+                    className: "my_col",
+                    data: function(k,v){
+                        rtsv = '';
+                        if(k.s2 =="0"){
+                            rtsv = '<button class="btn btn-xs btn-danger" " target_id="'+k.id+'" relay="4">關</button>';
                           
-                //         }
-                //         else{
-                //             rtsv = '<button class="btn btn-xs btn-success"  target_id="'+k.id+'" relay="4">開</button>';
-                //         }
+                        }
+                        else{
+                            rtsv = '<button class="btn btn-xs btn-success"  target_id="'+k.id+'" relay="4">開</button>';
+                        }
                       
-                //         return rtsv;
-                //     } 
-                // }
+                        return rtsv;
+                    } 
+                }
               
               
             ]

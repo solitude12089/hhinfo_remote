@@ -256,7 +256,13 @@ class BookingController extends Controller
                         $bh->customer_id = 0;
                         $bh->start_at = $range_id;
                         $bh->end_at = $endtime;
-                        $bh->aircontrol = $data['aircontrol'];
+                        if($bh->exists){
+                            $bh->aircontrol = $data['aircontrol'] || $bh->aircontrol;
+                        }
+                        else{
+                            $bh->aircontrol = $data['aircontrol'];
+                        }
+                        
                         $bh->user_id = $user->id;
                         $bh->description = $data['note'];
                         $bh->save();
@@ -710,7 +716,7 @@ class BookingController extends Controller
                 throw new \Exception('修改失敗,請點選資料');
             }
             DB::beginTransaction();
-            
+            $bh_list = [];
             foreach($data['modify_id'] as  $key => $value){
                 $ids = explode('@',$key);
                 $bhs = \App\models\BookingHistory::whereIn('id',$ids)->get();
@@ -726,9 +732,34 @@ class BookingController extends Controller
                     $syslog->save();
                     $bh->aircontrol=$value=="是"?"1":"0";
                     $bh->save();
+                    $bh_list[$bh->id] = $bh;
                 }
             }
             DB::commit();
+
+            if(count($bh_list)!=0){
+                $nowRanges = date('H:i');
+                $toDay = date('Y-m-d');
+                $tools = new \App\Tools2000;
+                foreach ($bh_list as $_bh_id => $_bh){
+                    if($_bh->start_at<=$nowRanges&&$_bh->end_at>$nowRanges&&$_bh->date==$toDay){
+                        if($_bh->aircontrol==1){
+                            $setData = [
+                                "3"=>"255",
+                                "4"=>"255"
+                            ];
+                        }
+                        else{
+                            $setData = [
+                                "3"=>"255",
+                                "4"=>"0"
+                            ];
+                        }
+                        $rt = $tools->setStatus($value->device_id,$setData);
+                    }
+                }
+            }
+
             return redirect('booking/query')->with('alert-success', '修改成功');
         }
         catch(\Exception $e){
