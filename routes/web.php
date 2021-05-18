@@ -105,7 +105,7 @@ Route::group(['middleware' => 'auth'], function(){
 		Route::post('/control_log','SystemLogController@control_log_search');
 		Route::get('/booking_history','SystemLogController@booking_history');
 		Route::get('/remove_history','SystemLogController@remove_history');
-		// Route::get('/air_log','SystemLogController@s2_change');
+		Route::get('/air_log','SystemLogController@s2_change');
 	});
 
 

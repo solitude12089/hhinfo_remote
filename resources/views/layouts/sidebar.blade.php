@@ -112,11 +112,10 @@
 							<a href="{{ url ('/systemlog/remove_history') }}">
 								<i class="fa fa-file-o fa-fw"></i>註銷紀錄
 							</a>
-							@if(0)
 							<a href="{{ url ('/systemlog/air_log') }}">
-								<i class="fa fa-file-o fa-fw"></i>冷氣電閘紀錄
+								<i class="fa fa-file-o fa-fw"></i>冷氣紀錄
 							</a>
-							@endif
+						
 						</li>
 					</ul>
 

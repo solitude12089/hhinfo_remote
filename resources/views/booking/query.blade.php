@@ -320,7 +320,8 @@
                     if(datatable==null){
                         datatable = $('#rt_table').DataTable({
                             pageLength: 50,
-                            dom: 'Bfrtip',
+                            dom: 'lBfrtip',
+                            lengthMenu: [[50, 100, 200, -1], [50, 100, 200, "All"]],
                             buttons: [
                                 {
                                     extend: 'excel',

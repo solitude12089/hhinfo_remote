@@ -59,7 +59,7 @@
 
 <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title">冷氣電閘紀錄</h3>
+        <h3 class="box-title">冷氣紀錄</h3>
         <div class="box-tools pull-right">
            
         </div>
@@ -115,10 +115,10 @@
                     title: "租借地點",
                 },
                 {
-                    title: "開閘時間",
+                    title: "開起時間",
                 },
                 {
-                    title: "關閘時間",
+                    title: "關閉時間",
                 }
                
             ],
