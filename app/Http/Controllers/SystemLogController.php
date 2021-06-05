@@ -157,9 +157,9 @@ class SystemLogController extends Controller
                 $tv['date'] = '';
             }
             $rt_data[] = [
-                $tv['date'],
-                $tv['user'],
-                $tv['target'],
+                isset($tv['date']) ? $tv['date'] :'',
+                isset($tv['time']) ? $tv['time'] :'',
+                isset($tv['target']) ? $tv['target'] :'',
                 $action,
                 $msg
             ];

@@ -41,9 +41,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('command:redoschedule')
                 ->cron('* * * * *')
                 ->withoutOverlapping();
-        $schedule->command('command:checklive')
-                ->everyFiveMinutes()
-                ->withoutOverlapping();
+        // $schedule->command('command:checklive')
+        //         ->everyFiveMinutes()
+        //         ->withoutOverlapping();
     }
 
     /**
